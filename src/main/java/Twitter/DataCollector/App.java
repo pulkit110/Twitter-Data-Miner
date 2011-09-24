@@ -1,8 +1,7 @@
 package Twitter.DataCollector;
 
 import org.hibernate.Session;
-
-import Twitter.DTO.StatusDto;
+import org.hibernate.Transaction;
 
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -11,6 +10,7 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 import DBUtils.HibernateUtil;
+import Twitter.DTO.StatusDto;
 
 /**
  * @author sapan & pulkit
@@ -18,11 +18,27 @@ import DBUtils.HibernateUtil;
  */
 public class App 
 {
+	static int BATCH_SIZE = 30;
+	static int COMMIT_SIZE = 10;
+	static Session session;
+	static Transaction transaction;
+	
     public static void main(String[] args) {
     	
     	StatusListener listener = new StatusListener(){
-            public void onStatus(Status status) {
-                System.out.println(status.getUser().getName() + " : " + status.getText());
+    		int countTweets = 0;	// Count to implement batch processing
+            
+    		public void onStatus(Status status) {
+                countTweets ++;
+                StatusDto statusDto = new StatusDto(status);
+                session.save(statusDto);
+                
+                // Save 1 round of tweets to the database
+                if (countTweets == BATCH_SIZE) {
+                	countTweets = 0;
+                	session.flush();
+                    session.clear();
+                }
             }
             
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {}
@@ -48,27 +64,12 @@ public class App
         TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
         twitterStream.addListener(listener);
         
-        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-        session.beginTransaction();
-        
-        StatusDto status = new StatusDto();
-        status.setFavorited(false);
-        status.setId(1);
-        status.setInReplyToScreenName("sdf");
-        status.setInReplyToStatusId(213412312);
-        status.setInReplyToUserId(21312);
-        status.setPlace("fdsfd");
-        status.setRetweetCount(7);
-        status.setSource("dfaf");
-        status.setText("sdaafdsaf");
-        status.setUser("fdasfds");
-        
-        session.saveOrUpdate(status);
-
-        session.getTransaction().commit();
-        HibernateUtil.getSessionFactory().close();        
-        
-     // sample() method internally creates a thread which manipulates TwitterStream and calls these adequate listener methods continuously.
-//        twitterStream.sample();
+        session = HibernateUtil.getSessionFactory().getCurrentSession();
+        transaction = session.beginTransaction();
+             
+        // sample() method internally creates a thread which manipulates TwitterStream and calls these adequate listener methods continuously.
+        twitterStream.sample();
+//        session.getTransaction().commit();
+//        session.close();
     }
 }

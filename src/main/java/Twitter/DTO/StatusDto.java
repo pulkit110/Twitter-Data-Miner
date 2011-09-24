@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import twitter4j.Status;
+
 /**
  * @author pulkit & sapan
  * 
@@ -28,6 +30,21 @@ public class StatusDto {
 	private String user;
 	private boolean isFavorited;
 	private boolean isNew;
+
+	public StatusDto(Status status) {		
+        this.setFavorited(status.isFavorited());
+        this.setId(status.getId());
+        this.setInReplyToScreenName(status.getInReplyToScreenName());
+        this.setInReplyToStatusId(status.getInReplyToStatusId());
+        this.setInReplyToUserId(status.getInReplyToUserId());
+        if (status.getPlace() != null) {
+        	this.setPlace(status.getPlace().getName());
+        }
+        this.setRetweetCount(status.getRetweetCount());
+        this.setSource(status.getSource());
+        this.setText(status.getText());
+        this.setUser(status.getUser().getName());
+	}
 
 	public Long getId() {
 		return id;
