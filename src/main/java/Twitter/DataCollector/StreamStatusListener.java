@@ -4,7 +4,7 @@
 package Twitter.DataCollector;
 
 /**
- * @author pulkit
+ * @author sapan & pulkit
  * 
  */
 public class StreamStatusListener {
