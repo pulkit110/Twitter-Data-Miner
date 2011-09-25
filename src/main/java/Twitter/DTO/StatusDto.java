@@ -3,8 +3,12 @@
  */
 package Twitter.DTO;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import twitter4j.Status;
@@ -19,11 +23,15 @@ public class StatusDto {
 
 	@Id
 	private long id;
-	
+
 	private String inReplyToScreenName;
 	private long inReplyToStatusId;
 	private long inReplyToUserId;
-	private String place;
+
+	@JoinColumn(name = "placeId")
+	@ManyToOne(targetEntity = PlaceDto.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private PlaceDto place;
+
 	private long retweetCount;
 	private String source;
 	private String text;
@@ -31,19 +39,20 @@ public class StatusDto {
 	private boolean isFavorited;
 	private boolean isNew;
 
-	public StatusDto(Status status) {		
-        this.setFavorited(status.isFavorited());
-        this.setId(status.getId());
-        this.setInReplyToScreenName(status.getInReplyToScreenName());
-        this.setInReplyToStatusId(status.getInReplyToStatusId());
-        this.setInReplyToUserId(status.getInReplyToUserId());
-        if (status.getPlace() != null) {
-        	this.setPlace(status.getPlace().getName());
-        }
-        this.setRetweetCount(status.getRetweetCount());
-        this.setSource(status.getSource());
-        this.setText(status.getText());
-        this.setUser(status.getUser().getName());
+	public StatusDto(Status status) {
+		this.setFavorited(status.isFavorited());
+		this.setId(status.getId());
+		this.setInReplyToScreenName(status.getInReplyToScreenName());
+		this.setInReplyToStatusId(status.getInReplyToStatusId());
+		this.setInReplyToUserId(status.getInReplyToUserId());
+		if (status.getPlace() != null) {
+			this.setPlace(new PlaceDto(status.getPlace()));
+		}
+		this.setRetweetCount(status.getRetweetCount());
+		this.setSource(status.getSource());
+		this.setText(status.getText());
+		this.setUser(status.getUser().getName());
+		this.setNew(true);
 	}
 
 	public Long getId() {
@@ -78,11 +87,11 @@ public class StatusDto {
 		this.inReplyToUserId = inReplyToUserId;
 	}
 
-	public String getPlace() {
+	public PlaceDto getPlace() {
 		return place;
 	}
 
-	public void setPlace(String place) {
+	public void setPlace(PlaceDto place) {
 		this.place = place;
 	}
 
@@ -124,5 +133,13 @@ public class StatusDto {
 
 	public void setFavorited(boolean isFavorited) {
 		this.isFavorited = isFavorited;
+	}
+
+	public void setNew(boolean isNew) {
+		this.isNew = isNew;
+	}
+
+	public boolean isNew() {
+		return isNew;
 	}
 }

@@ -31,7 +31,7 @@ public class App
     		public void onStatus(Status status) {
                 countTweets ++;
                 StatusDto statusDto = new StatusDto(status);
-                session.save(statusDto);
+                session.saveOrUpdate(statusDto);
                 
                 // Save 1 round of tweets to the database
                 if (countTweets == BATCH_SIZE) {
@@ -69,7 +69,5 @@ public class App
              
         // sample() method internally creates a thread which manipulates TwitterStream and calls these adequate listener methods continuously.
         twitterStream.sample();
-//        session.getTransaction().commit();
-//        session.close();
     }
 }
