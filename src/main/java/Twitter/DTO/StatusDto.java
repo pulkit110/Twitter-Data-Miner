@@ -39,6 +39,13 @@ public class StatusDto {
 	private boolean isFavorited;
 	private boolean isNew;
 
+	/**
+	 * Default Constructor
+	 */
+	public StatusDto() {
+		
+	}
+	
 	public StatusDto(Status status) {
 		this.setFavorited(status.isFavorited());
 		this.setId(status.getId());

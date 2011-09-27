@@ -1,5 +1,6 @@
 package Twitter.DataCollector;
 
+import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -31,7 +32,12 @@ public class App
     		public void onStatus(Status status) {
                 countTweets ++;
                 StatusDto statusDto = new StatusDto(status);
-                session.saveOrUpdate(statusDto);
+                try {
+                	session.saveOrUpdate(statusDto);
+                } catch (NonUniqueObjectException e) {
+                	session.merge(statusDto);
+                }
+                
                 
                 // Save 1 round of tweets to the database
                 if (countTweets == BATCH_SIZE) {
