@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Twitter.DataCollector;
+package twitter.datacollector;
 
 /**
  * @author sapan & pulkit

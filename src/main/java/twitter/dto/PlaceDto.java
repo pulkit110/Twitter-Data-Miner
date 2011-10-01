@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Twitter.DTO;
+package twitter.dto;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

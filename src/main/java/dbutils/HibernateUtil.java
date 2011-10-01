@@ -1,7 +1,7 @@
 /**
  * 
  */
-package DBUtils;
+package dbutils;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;

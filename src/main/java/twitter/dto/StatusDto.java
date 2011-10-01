@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Twitter.DTO;
+package twitter.dto;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;

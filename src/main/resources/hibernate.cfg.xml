@@ -13,16 +13,19 @@
 		<property name="show_sql">false</property>
 
 		<property name="format_sql">true</property>
-		<property name="hbm2ddl.auto">validate</property>
+		<property name="hbm2ddl.auto">create</property>
 
 		<!-- JDBC connection pool (use the built-in) -->
 		<property name="connection.pool_size">1</property>
 		<property name="hibernate.jdbc.batch_size">30</property>
 		<property name="current_session_context_class">thread</property>
 
-		<mapping class="Twitter.DTO.StatusDto" />
-		<mapping class="Twitter.DTO.PlaceDto" />
 		
 		<!-- Mapping files will go here.... -->
+		<mapping class="twitter.dto.StatusDto" />
+		<mapping class="twitter.dto.PlaceDto" />
+		<mapping class="twitter.dto.UserDto" />
+		
+		
 	</session-factory>
 </hibernate-configuration>
