@@ -4,11 +4,13 @@
 package twitter.dto;
 
 import java.net.URL;
-import java.sql.Date;
+import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import twitter4j.User;
 
 /**
  * @author pulkit & sapan
@@ -20,7 +22,7 @@ public class UserDto {
 
 	@Id
 	long id;
-	
+
 	Date createdAt;
 	String description;
 	int favouritesCount;
@@ -32,8 +34,8 @@ public class UserDto {
 	int listedCount;
 	String location;
 	String name;
-	URL prfileimageURLHttps;
-	URL profileImageURL;
+	String prfileimageURLHttps;
+	String profileImageURL;
 	String screenName;
 	int statusesCount;
 	String timeZone;
@@ -42,6 +44,28 @@ public class UserDto {
 
 	public UserDto() {
 
+	}
+
+	public UserDto(User u) {
+		this.createdAt = (Date) u.getCreatedAt();
+		this.description = u.getDescription();
+		this.favouritesCount = u.getFavouritesCount();
+		this.followersCount = u.getFollowersCount();
+		this.friendsCount = u.getFriendsCount();
+		this.id = u.getId();
+		this.isGeoEnabled = u.isGeoEnabled();
+		this.isVerified = u.isVerified();
+		this.lang = u.getLang();
+		this.listedCount = u.getListedCount();
+		this.location = u.getLocation();
+		this.name = u.getName();
+		this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
+		this.profileImageURL = u.getProfileImageURL().getPath();
+		this.screenName = u.getScreenName();
+		this.statusesCount = u.getStatusesCount();
+		this.timeZone = u.getTimeZone();
+		this.url = u.getURL();
+		this.utcOffset = u.getUtcOffset();
 	}
 
 	public Date getCreatedAt() {
@@ -140,19 +164,19 @@ public class UserDto {
 		this.name = name;
 	}
 
-	public URL getPrfileimageURLHttps() {
+	public String getPrfileimageURLHttps() {
 		return prfileimageURLHttps;
 	}
 
-	public void setPrfileimageURLHttps(URL prfileimageURLHttps) {
+	public void setPrfileimageURLHttps(String prfileimageURLHttps) {
 		this.prfileimageURLHttps = prfileimageURLHttps;
 	}
 
-	public URL getProfileImageURL() {
+	public String getProfileImageURL() {
 		return profileImageURL;
 	}
 
-	public void setProfileImageURL(URL profileImageURL) {
+	public void setProfileImageURL(String profileImageURL) {
 		this.profileImageURL = profileImageURL;
 	}
 
