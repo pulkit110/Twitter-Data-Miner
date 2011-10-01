@@ -61,7 +61,10 @@ public class UserConnectionAnalyzer {
 				}
 				cursor = followersIds.getNextCursor();
 			}while (followersIds.hasNext());
-
+			
+			session.flush();
+			session.clear();
+			
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -70,6 +73,6 @@ public class UserConnectionAnalyzer {
 
 	public static void main(String[] args) {
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		uca.collectData("pulkit110", 1);
+		uca.collectData("diwakarsapan", 1);
 	}
 }
