@@ -1,8 +1,10 @@
 package twitter.datacollector;
 
+import org.apache.log4j.Logger;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
+import org.slf4j.LoggerFactory;
 
 import dbutils.HibernateUtil;
 
@@ -18,21 +20,28 @@ public class UserConnectionAnalyzer {
 
 	private static final int BATCH_SIZE = 30;
 	private static final int USER_REQUEST_LIMIT = 100;
+	private static Session session;
+	private static Transaction transaction;
+	private static Twitter twitter;
+	private static int countUsers;
+	
+	org.slf4j.Logger logger = LoggerFactory.getLogger(UserConnectionAnalyzer.class);
 
 	public UserConnectionAnalyzer() {
 	};
 
 	public void collectData(String screenName, int connectionDepth) {
+
+		if (connectionDepth <= 0) {
+			return;
+		}
 		
-		Twitter twitter = TwitterFactory.getSingleton();
-		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-		Transaction transaction = session.beginTransaction();
-		
+		logger.info("Collecting followers for " + screenName);
 		
 		try {
 			long userId = twitter.showUser(screenName).getId();
 			long cursor = -1;
-			int countUsers = 0;
+			
 			IDs followersIds;
 			do {
 				followersIds = twitter.getFollowersIDs(screenName, cursor);
@@ -47,6 +56,7 @@ public class UserConnectionAnalyzer {
 						countUsers ++;
 						try {
 							session.saveOrUpdate(user);
+							collectData(user.getScreenName(), connectionDepth-1);
 						} catch (NonUniqueObjectException e) {
 							session.merge(user);
 						}
@@ -72,7 +82,12 @@ public class UserConnectionAnalyzer {
 	}
 
 	public static void main(String[] args) {
+		session = HibernateUtil.getSessionFactory().getCurrentSession();
+		transaction = session.beginTransaction();
+		twitter = TwitterFactory.getSingleton();
+		countUsers = 0;
+
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		uca.collectData("diwakarsapan", 1);
+		uca.collectData("diwakarsapan", 2);
 	}
 }
