@@ -67,7 +67,7 @@ public class App {
 				Twitter4jProperties.CONSUMER_KEY).setOAuthConsumerSecret(
 				Twitter4jProperties.CONSUMER_SECRET).setOAuthAccessToken(
 				Twitter4jProperties.ACCESS_TOKEN).setOAuthAccessTokenSecret(
-				Twitter4jProperties.ACCESS_TOKEN_SECRET).setUseSSL(true);
+				Twitter4jProperties.ACCESS_TOKEN_SECRET).setUseSSL(true).setDebugEnabled(true);
 
 		TwitterStream twitterStream = new TwitterStreamFactory(cb.build())
 				.getInstance();
