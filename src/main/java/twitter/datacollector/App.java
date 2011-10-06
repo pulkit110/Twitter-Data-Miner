@@ -62,14 +62,14 @@ public class App {
 			}
 		};
 
-		ConfigurationBuilder cb = new ConfigurationBuilder();
-		cb.setDebugEnabled(true).setOAuthConsumerKey(
-				Twitter4jProperties.CONSUMER_KEY).setOAuthConsumerSecret(
-				Twitter4jProperties.CONSUMER_SECRET).setOAuthAccessToken(
-				Twitter4jProperties.ACCESS_TOKEN).setOAuthAccessTokenSecret(
-				Twitter4jProperties.ACCESS_TOKEN_SECRET).setUseSSL(true).setDebugEnabled(true);
+//		ConfigurationBuilder cb = new ConfigurationBuilder();
+//		cb.setDebugEnabled(true).setOAuthConsumerKey(
+//				Twitter4jProperties.CONSUMER_KEY).setOAuthConsumerSecret(
+//				Twitter4jProperties.CONSUMER_SECRET).setOAuthAccessToken(
+//				Twitter4jProperties.ACCESS_TOKEN).setOAuthAccessTokenSecret(
+//				Twitter4jProperties.ACCESS_TOKEN_SECRET).setUseSSL(true).setDebugEnabled(true);
 
-		TwitterStream twitterStream = new TwitterStreamFactory(cb.build())
+		TwitterStream twitterStream = new TwitterStreamFactory()
 				.getInstance();
 		twitterStream.addListener(listener);
 
