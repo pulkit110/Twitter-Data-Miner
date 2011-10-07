@@ -34,8 +34,8 @@ public class UserDto {
 	int listedCount;
 	String location;
 	String name;
-	String prfileimageURLHttps;
-	String profileImageURL;
+	//String prfileimageURLHttps;
+	//String profileImageURL;
 	String screenName;
 	int statusesCount;
 	String timeZone;
@@ -59,8 +59,8 @@ public class UserDto {
 		this.listedCount = u.getListedCount();
 		this.location = u.getLocation();
 		this.name = u.getName();
-		this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
-		this.profileImageURL = u.getProfileImageURL().getPath();
+		//this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
+		//this.profileImageURL = u.getProfileImageURL().getPath();
 		this.screenName = u.getScreenName();
 		this.statusesCount = u.getStatusesCount();
 		this.timeZone = u.getTimeZone();
@@ -163,7 +163,7 @@ public class UserDto {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+/*
 	public String getPrfileimageURLHttps() {
 		return prfileimageURLHttps;
 	}
@@ -179,7 +179,7 @@ public class UserDto {
 	public void setProfileImageURL(String profileImageURL) {
 		this.profileImageURL = profileImageURL;
 	}
-
+*/
 	public String getScreenName() {
 		return screenName;
 	}

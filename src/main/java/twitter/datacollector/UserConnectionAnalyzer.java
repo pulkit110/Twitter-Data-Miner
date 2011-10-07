@@ -66,6 +66,9 @@ public class UserConnectionAnalyzer {
 							countUsers = 0;
 							session.flush();
 							session.clear();
+							transaction.commit();
+							session = HibernateUtil.getSessionFactory().getCurrentSession();
+							transaction = session.beginTransaction();
 						}
 					}
 				}
@@ -88,6 +91,8 @@ public class UserConnectionAnalyzer {
 		countUsers = 0;
 
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		uca.collectData("diwakarsapan", 2);
+		uca.collectData("epomqo",1);
+		transaction.commit();
+		//session.close();
 	}
 }
