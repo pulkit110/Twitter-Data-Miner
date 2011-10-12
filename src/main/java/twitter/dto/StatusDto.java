@@ -30,9 +30,15 @@ import twitter4j.UserMentionEntity;
 @Table(name = "status")
 public class StatusDto {
 
+	public static final int TYPE_FOLLOW = 1;
+	public static final int TYPE_LOCATION = 2;
+	public static final int TYPE_KEYWORD = 4;
+	
 	@Id
 	private long id;
 
+	private int type;
+	
 	private String inReplyToScreenName;
 	private long inReplyToStatusId;
 	private long inReplyToUserId;
@@ -301,5 +307,13 @@ public class StatusDto {
 
 	public void setUserMentionIds(List<Long> userMentionIds) {
 		this.userMentionIds = userMentionIds;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public int getType() {
+		return type;
 	}
 }
