@@ -4,7 +4,6 @@ import twitter.utils.TwitterStreamUtils;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
-import dbutils.HibernateUtil;
 
 public class TweetKeywordCollector {
 
