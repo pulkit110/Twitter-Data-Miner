@@ -25,7 +25,7 @@
 		<mapping class="twitter.dto.StatusDto" />
 		<mapping class="twitter.dto.PlaceDto" />
 		<mapping class="twitter.dto.UserDto" />
-		<mapping class="twitter.dto.GeolocationDto" />
+		<!--   mapping class="twitter.dto.GeolocationDto" / -->
 		
 		
 	</session-factory>
