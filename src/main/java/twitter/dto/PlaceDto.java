@@ -3,10 +3,14 @@
  */
 package twitter.dto;
 
+import java.util.List;
+
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import twitter4j.GeoLocation;
 import twitter4j.Place;
 
 /**
@@ -25,6 +29,9 @@ public class PlaceDto {
 	String streetAddress;
 	String name;
 	String fullName;
+	String url;
+	@ElementCollection
+	List<GeolocationDto> boundingBox; 
 
 	public PlaceDto(Place place) {
 		id = place.getId();
@@ -34,6 +41,15 @@ public class PlaceDto {
 		streetAddress = place.getStreetAddress();
 		name = place.getName();
 		fullName = place.getFullName();
+		url = place.getURL();
+		GeoLocation[][] bBox = place.getBoundingBoxCoordinates();
+		for (int i = 0; i < bBox.length; ++i) {
+			GeolocationDto g = new GeolocationDto();
+			g.setStartLatitude(bBox[i][0].getLatitude());
+			g.setStartLongitude(bBox[i][0].getLongitude());
+			g.setEndLatitude(bBox[i][1].getLatitude());
+			g.setEndLongitude(bBox[i][1].getLongitude());
+		}
 	}
 
 	public String getId() {

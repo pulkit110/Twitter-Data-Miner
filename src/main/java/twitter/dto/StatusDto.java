@@ -47,10 +47,13 @@ public class StatusDto {
 	@ManyToOne(targetEntity = PlaceDto.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private PlaceDto place;
 
+	@JoinColumn(name = "userId")
+	@ManyToOne(targetEntity = UserDto.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private UserDto user;
+	
 	private long retweetCount;
 	private String source;
 	private String text;
-	private String user;
 	private boolean isFavorited;
 	private boolean isRetweet;
 	private boolean isRetweetedByMe;
@@ -90,7 +93,7 @@ public class StatusDto {
 		this.setRetweetCount(status.getRetweetCount());
 		this.setSource(status.getSource());
 		this.setText(status.getText());
-		this.setUser(status.getUser().getName());
+		this.setUser(new UserDto(status.getUser()));
 		this.setRetweet(status.isRetweet());
 		this.setRetweetedByMe(status.isRetweetedByMe());
 		if (status.getGeoLocation() != null) {
@@ -197,11 +200,11 @@ public class StatusDto {
 		this.text = text;
 	}
 
-	public String getUser() {
+	public UserDto getUser() {
 		return user;
 	}
 
-	public void setUser(String user) {
+	public void setUser(UserDto user) {
 		this.user = user;
 	}
 
