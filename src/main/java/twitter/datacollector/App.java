@@ -9,7 +9,7 @@ import org.hibernate.Transaction;
  */
 public class App {
 	static Session session;
-	static Transaction transaction;
+	static Transaction transaction; 
 
 	public static void main(String[] args) {
 

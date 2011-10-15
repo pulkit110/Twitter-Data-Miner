@@ -63,9 +63,7 @@ public class StatusDto {
 	private Double geoLocationLongitude;
 	private Date createdAt;
 	@ElementCollection
-	private List<Integer> startHashTagIndex;
-	@ElementCollection
-	private List<Integer> endHashTagIndex;
+	private List<String> hashedTags;
 	@ElementCollection
 	private List<String> mediaUrls;
 	@ElementCollection
@@ -111,11 +109,9 @@ public class StatusDto {
 		}
 		
 		if (status.getHashtagEntities() != null) {
-			this.startHashTagIndex = new ArrayList<Integer>();
-			this.endHashTagIndex = new ArrayList<Integer>();
+			this.hashedTags = new ArrayList<String>();
 			for (HashtagEntity hashTagEntity : status.getHashtagEntities()) {
-				this.startHashTagIndex.add(hashTagEntity.getStart());
-				this.endHashTagIndex.add(hashTagEntity.getEnd());
+				this.hashedTags.add(hashTagEntity.getText());
 			}
 		}
 		
@@ -272,22 +268,6 @@ public class StatusDto {
 		this.createdAt = createdAt;
 	}
 
-	public List<Integer> getStartHashTagIndex() {
-		return startHashTagIndex;
-	}
-
-	public void setStartHashTagIndex(List<Integer> startHashTagIndex) {
-		this.startHashTagIndex = startHashTagIndex;
-	}
-
-	public List<Integer> getEndHashTagIndex() {
-		return endHashTagIndex;
-	}
-
-	public void setEndHashTagIndex(List<Integer> endHashTagIndex) {
-		this.endHashTagIndex = endHashTagIndex;
-	}
-
 	public List<String> getMediaUrls() {
 		return mediaUrls;
 	}
@@ -319,4 +299,12 @@ public class StatusDto {
 	public int getType() {
 		return type;
 	}
+
+	public List<String> getHashedTags() {
+		return hashedTags;
+	}
+
+	public void setHashedTags(List<String> hashedTags) {
+		this.hashedTags = hashedTags;
+	}	
 }

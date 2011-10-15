@@ -27,6 +27,9 @@ public class UserConnectionAnalyzer {
 	public static int TRACK_FOLLOWING = 2;
 	public static int TRACK_BOTH = 3;
 
+	public static int THRESHOLD_FOLLOWERS_COUNT = 5000;
+	public static int THRESHOLD_FOLLOWING_COUNT = 1000;
+
 	static org.slf4j.Logger logger = LoggerFactory
 			.getLogger(UserConnectionAnalyzer.class);
 
@@ -44,6 +47,12 @@ public class UserConnectionAnalyzer {
 		try {
 			@SuppressWarnings("unused")
 			long userId = twitter.showUser(screenName).getId();
+			try {
+				Thread.sleep(11000);
+			} catch (InterruptedException e1) {
+				logger.info(e1.getMessage());
+			}
+			
 			long cursor = -1;
 			long cursor1 = -1;
 
@@ -57,6 +66,11 @@ public class UserConnectionAnalyzer {
 				do {
 					followersIds = twitter.getFollowersIDs(screenName, cursor);
 					friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+					try {
+						Thread.sleep(11000);
+					} catch (InterruptedException e1) {
+						logger.info(e1.getMessage());
+					}
 					long[] followerIds = followersIds.getIDs();
 					long[] friendIds = friendsIds.getIDs();
 					long[] ids = new long[followerIds.length + friendIds.length];
@@ -75,7 +89,16 @@ public class UserConnectionAnalyzer {
 								idsSubArray, 0, length);
 						ResponseList<User> users = twitter
 								.lookupUsers(idsSubArray);
+						try {
+							Thread.sleep(11000);
+						} catch (InterruptedException e1) {
+							logger.info(e1.getMessage());
+						}
 						for (User u : users) {
+							if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
+									|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
+								continue;
+							}
 							UserDto user = new UserDto(u);
 							countUsers++;
 							try {
@@ -118,8 +141,18 @@ public class UserConnectionAnalyzer {
 		do {
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
 				usersIds = twitter.getFollowersIDs(screenName, cursor);
+				try {
+					Thread.sleep(11000);
+				} catch (InterruptedException e1) {
+					logger.info(e1.getMessage());
+				}
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
 				usersIds = twitter.getFriendsIDs(screenName, cursor);
+				try {
+					Thread.sleep(11000);
+				} catch (InterruptedException e1) {
+					logger.info(e1.getMessage());
+				}
 			} else {
 				logger.error("UserConnectionAnalyzer: Unexpected type");
 				return;
@@ -134,7 +167,16 @@ public class UserConnectionAnalyzer {
 				System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray, 0,
 						length);
 				ResponseList<User> users = twitter.lookupUsers(idsSubArray);
+				try {
+					Thread.sleep(11000);
+				} catch (InterruptedException e1) {
+					logger.info(e1.getMessage());
+				}
 				for (User u : users) {
+					if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
+							|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
+						continue;
+					}
 					UserDto user = new UserDto(u);
 					countUsers++;
 					try {
@@ -168,7 +210,7 @@ public class UserConnectionAnalyzer {
 		countUsers = 0;
 
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		uca.collectData("diwakarsapan", 1, UserConnectionAnalyzer.TRACK_BOTH);
+		uca.collectData("diwakarsapan", 2, UserConnectionAnalyzer.TRACK_BOTH);
 		transaction.commit();
 		// session.close();
 	}
