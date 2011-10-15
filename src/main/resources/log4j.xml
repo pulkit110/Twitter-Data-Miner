@@ -21,11 +21,11 @@
 
 	<logger name="twitter4j">
 		<level value="DEBUG" />
-		<appender-ref ref="ABCBank-Warn" />
+		<appender-ref ref="Twitterlogs" />
 	</logger>
 
 	<root>
 		<level value="INFO" />
-		<appender-ref ref="ABCBank-Warn" />
+		<appender-ref ref="Twitterlogs" />
 	</root>
 </log4j:configuration>
