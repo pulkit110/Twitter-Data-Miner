@@ -26,7 +26,7 @@ public class TweetUserCollector2 {
 		setOAuthConsumerSecret("8EkSngwzOqefzukurJ8XGCbTnBZNekJ8uAK2xUhSs").setUseSSL(true).setDebugEnabled(true);
 		
 		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-		@SuppressWarnings("unusedddddd")
+		@SuppressWarnings("unused")
 		Transaction transaction = session.beginTransaction();
 
 		Query q = session.createQuery("from UserDto");
