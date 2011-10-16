@@ -28,6 +28,7 @@
 		<mapping class="twitter.dto.UserDto" />
 		<mapping class="twitter.dto.FollowerIdDto" />
 		<mapping class="twitter.dto.FriendIdDto" />
+		<mapping class="twitter.dto.MentionEntityDto" />
 		<!-- mapping class="twitter.dto.GeolocationDto" / -->
 
 

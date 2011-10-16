@@ -5,7 +5,9 @@ package twitter.dto;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
@@ -13,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -71,6 +74,8 @@ public class StatusDto {
 	@ElementCollection
 	private List<Long> userMentionIds;
 	
+	@ManyToMany(cascade = CascadeType.ALL)
+	Set<MentionEntityDto> mentionedEntity;
 
 	/**
 	 * Default Constructor
@@ -79,7 +84,7 @@ public class StatusDto {
 
 	}
 
-	public StatusDto(Status status) {
+	public StatusDto(Status status) {		 
 		this.setFavorited(status.isFavorited());
 		this.setId(status.getId());
 		this.setInReplyToScreenName(status.getInReplyToScreenName());
@@ -130,6 +135,7 @@ public class StatusDto {
 		}
 		
 		this.setNew(true);
+		this.mentionedEntity = new HashSet<MentionEntityDto>();
 	}
 
 	public Long getId() {
@@ -306,5 +312,13 @@ public class StatusDto {
 
 	public void setHashedTags(List<String> hashedTags) {
 		this.hashedTags = hashedTags;
+	}
+
+	public Set<MentionEntityDto> getMentionedEntity() {
+		return mentionedEntity;
+	}
+
+	public void setMentionedEntity(Set<MentionEntityDto> mentionedEntity) {
+		this.mentionedEntity = mentionedEntity;
 	}	
 }

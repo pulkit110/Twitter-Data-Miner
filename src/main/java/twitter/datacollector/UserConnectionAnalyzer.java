@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.Criteria;
-import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
@@ -59,6 +58,8 @@ public class UserConnectionAnalyzer {
 			Criteria criteria = session.createCriteria(UserDto.class);
 			criteria.add(Restrictions.eq("screenName", screenName));
 			UserDto currentUser = (UserDto) criteria.uniqueResult();
+			currentUser.setVisited(true);
+
 			if (currentUser.getFollowersIds() == null) {
 				currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
 			}
@@ -128,29 +129,35 @@ public class UserConnectionAnalyzer {
 							UserDto user = new UserDto(u);
 							user.setConnectionDepth(connectionDepth - 1);
 							countUsers++;
-							try {
+							boolean visitedIncorrectly = false;
+							boolean newVisit = false;
+							UserDto existingUser = (UserDto) session.get(
+									UserDto.class, user.getId());
+							if (existingUser == null) {
 								session.saveOrUpdate(user);
-							} catch (NonUniqueObjectException e) {
-								UserDto existingUser = (UserDto) session.get(
-										UserDto.class, user.getId());
+								newVisit = true;
+							} else {
 								if (existingUser.getConnectionDepth() < user
 										.getConnectionDepth()) {
+									visitedIncorrectly = true;
 									session.merge(user);
 								}
-							} finally {
-								if (countUsers == BATCH_SIZE) {
-									countUsers = 0;
-									session.flush();
-									session.clear();
-									transaction.commit();
-									session = HibernateUtil.getSessionFactory()
-											.getCurrentSession();
-									transaction = session.beginTransaction();
-								}
+							}
+
+							if (countUsers == BATCH_SIZE) {
+								countUsers = 0;
+								session.flush();
+								session.clear();
+								transaction.commit();
+								session = HibernateUtil.getSessionFactory()
+										.getCurrentSession();
+								transaction = session.beginTransaction();
+							}
+
+							if (newVisit || visitedIncorrectly) {
 								collectData(user.getScreenName(),
 										connectionDepth - 1, type);
 							}
-
 						}
 					}
 					cursor = followersIds.getNextCursor();
@@ -174,6 +181,7 @@ public class UserConnectionAnalyzer {
 		Criteria criteria = session.createCriteria(UserDto.class);
 		criteria.add(Restrictions.eq("screenName", screenName));
 		UserDto currentUser = (UserDto) criteria.uniqueResult();
+		currentUser.setVisited(true);
 		if (currentUser.getFollowersIds() == null) {
 			currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
 		}
@@ -235,27 +243,34 @@ public class UserConnectionAnalyzer {
 					UserDto user = new UserDto(u);
 					user.setConnectionDepth(connectionDepth - 1);
 					countUsers++;
-					try {
-						session.saveOrUpdate(user);
 
-					} catch (NonUniqueObjectException e) {
-						UserDto existingUser = (UserDto) session.get(
-								UserDto.class, user.getId());
+					boolean visitedIncorrectly = false;
+					boolean newVisit = false;
+					UserDto existingUser = (UserDto) session.get(UserDto.class,
+							user.getId());
+					if (existingUser == null) {
+						session.saveOrUpdate(user);
+						newVisit = true;
+					} else {
 						if (existingUser.getConnectionDepth() < user
 								.getConnectionDepth()) {
+							visitedIncorrectly = true;
 							session.merge(user);
 						}
-					} finally {
-						if (countUsers == BATCH_SIZE) {
-							countUsers = 0;
-							session.flush();
-							session.clear();
-							transaction.commit();
-							session = HibernateUtil.getSessionFactory()
-									.getCurrentSession();
-							transaction = session.beginTransaction();
-						}
-						collectData(user.getScreenName(), connectionDepth-1, type);
+					}
+					if (countUsers == BATCH_SIZE) {
+						countUsers = 0;
+						session.flush();
+						session.clear();
+						transaction.commit();
+						session = HibernateUtil.getSessionFactory()
+								.getCurrentSession();
+						transaction = session.beginTransaction();
+					}
+
+					if (newVisit || visitedIncorrectly) {
+						collectData(user.getScreenName(), connectionDepth - 1,
+								type);
 					}
 
 				}
@@ -271,12 +286,13 @@ public class UserConnectionAnalyzer {
 		twitter = TwitterFactory.getSingleton();
 		countUsers = 0;
 
-		String screenName = "diwakarsapan";
+		String screenName = "__Neha";
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
 
 		try {
 			UserDto u = new UserDto(twitter.showUser(screenName));
 			u.setConnectionDepth(2);
+			u.setVisited(true);
 			session.saveOrUpdate(u);
 			// countUsers++;
 		} catch (TwitterException e) {

@@ -58,6 +58,7 @@ public class StatusStreamListener implements StatusListener {
 		} catch (NonUniqueObjectException e) {
 			StatusDto existingStatus = (StatusDto) session.get(StatusDto.class, statusDto.getId());
 			statusDto.setType(existingStatus.getType()|this.type);
+			statusDto.setMentionedEntity(null); // TODO fix this
 			session.merge(statusDto);
 		}
 

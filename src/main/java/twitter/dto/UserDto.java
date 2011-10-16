@@ -49,6 +49,7 @@ public class UserDto {
 	URL url;
 	int utcOffset;
 	int connectionDepth;
+	boolean visited;
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	Set<FollowerIdDto> followersIds;
@@ -57,6 +58,7 @@ public class UserDto {
 	Set<FriendIdDto> friendsIds;
 
 	public UserDto() {
+		this.visited = false;
 	}
 
 	public UserDto(User u) {
@@ -79,6 +81,7 @@ public class UserDto {
 		this.utcOffset = u.getUtcOffset();
 		this.followersIds = new HashSet<FollowerIdDto>();
 		this.friendsIds = new HashSet<FriendIdDto>();
+		this.visited = false;
 	}
 
 	public Date getCreatedAt() {
@@ -239,6 +242,14 @@ public class UserDto {
 
 	public void setFriendsIds(Set<FriendIdDto> friendsIds) {
 		this.friendsIds = friendsIds;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
+
+	public void setVisited(boolean visited) {
+		this.visited = visited;
 	}
 
 }

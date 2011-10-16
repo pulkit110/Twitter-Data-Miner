@@ -12,20 +12,20 @@
 	<appender name="Twitterlogs" class="org.apache.log4j.RollingFileAppender">
 		<param name="File" value="./logs/twitter.log" />
 		<param name="Append" value="true" />
-		<param name="MaxFileSize" value="500KB" />
-		<param name="MaxBackupIndex" value="2" />
+		<param name="MaxFileSize" value="5000KB" />
+		<param name="MaxBackupIndex" value="22" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d %5p [%c] %m%n" />
 		</layout>
 	</appender>
 
 	<logger name="twitter4j">
-		<level value="DEBUG" />
+		<level value="ALL" />
 		<appender-ref ref="Twitterlogs" />
 	</logger>
 	
 	<root>
-		<level value="INFO" />
+		<level value="ALL" />
 		<appender-ref ref="Twitterlogs" />
 	</root>
 	
