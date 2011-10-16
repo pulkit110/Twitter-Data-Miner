@@ -5,16 +5,6 @@
 <hibernate-configuration>
 	<session-factory>
 
-<!-- 
-		<property name="cache.use_second_level_cache">true</property>
-		<property name="cache.use_query_cache">true</property>
-		<property name="cache.region.factory_class">org.hibernate.cache.jbc2.JndiMultiplexedJBossCacheRegionFactory</property>
-		<property name="cache.region.jbc2.cachefactory">java:CacheManager</property>
-		<property name="cache.region.jbc2.cfg.entity">mvcc-entity</property>
-		<property name="cache.region.jbc2.cfg.query">local-query</property>
-		<property name="cache.region_prefix">twitter</property>
- -->
-
 		<property name="connection.url">jdbc:mysql://localhost/twitter</property>
 		<property name="connection.username">root</property>
 		<property name="connection.password">password</property>

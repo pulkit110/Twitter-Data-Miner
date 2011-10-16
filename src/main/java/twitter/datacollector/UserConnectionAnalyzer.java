@@ -52,12 +52,6 @@ public class UserConnectionAnalyzer {
 		logger.info("Collecting followers for " + screenName);
 
 		try {
-			// long userId = twitter.showUser(screenName).getId();
-			// try {
-			// Thread.sleep(11000);
-			// } catch (InterruptedException e1) {
-			// logger.info(e1.getMessage());
-			// }
 
 			long cursor = -1;
 			long cursor1 = -1;
@@ -71,7 +65,7 @@ public class UserConnectionAnalyzer {
 			if (currentUser.getFriendsIds() == null) {
 				currentUser.setFriendsIds(new HashSet<FriendIdDto>());
 			}
-			
+
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
 				collectConnectedUsers(screenName, cursor, connectionDepth, type);
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
@@ -82,13 +76,16 @@ public class UserConnectionAnalyzer {
 				do {
 					followersIds = twitter.getFollowersIDs(screenName, cursor);
 					friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+
 					Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
 					Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
 					for (long id : followersIds.getIDs()) {
-						followersSet.add(new FollowerIdDto(id,currentUser.getId()));
+						followersSet.add(new FollowerIdDto(id, currentUser
+								.getId()));
 					}
 					for (long id : friendsIds.getIDs()) {
-						friendsSet.add(new FriendIdDto(id,currentUser.getId()));
+						friendsSet
+								.add(new FriendIdDto(id, currentUser.getId()));
 					}
 					currentUser.getFollowersIds().addAll(followersSet);
 					currentUser.getFriendsIds().addAll(friendsSet);
@@ -107,6 +104,8 @@ public class UserConnectionAnalyzer {
 					for (int i = 0; i < friendIds.length; ++i) {
 						ids[followerIds.length + i] = friendIds[i];
 					}
+					// break ids array into arrays of size of user request
+					// limit(100)
 					for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
 						int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
 								- i * USER_REQUEST_LIMIT
@@ -127,7 +126,7 @@ public class UserConnectionAnalyzer {
 								continue;
 							}
 							UserDto user = new UserDto(u);
-							user.setConnectionDepth(connectionDepth);
+							user.setConnectionDepth(connectionDepth - 1);
 							countUsers++;
 							try {
 								session.saveOrUpdate(user);
@@ -137,8 +136,6 @@ public class UserConnectionAnalyzer {
 								if (existingUser.getConnectionDepth() < user
 										.getConnectionDepth()) {
 									session.merge(user);
-									collectData(user.getScreenName(),
-											user.getConnectionDepth() - 1, type);
 								}
 							} finally {
 								if (countUsers == BATCH_SIZE) {
@@ -154,7 +151,6 @@ public class UserConnectionAnalyzer {
 										connectionDepth - 1, type);
 							}
 
-							
 						}
 					}
 					cursor = followersIds.getNextCursor();
@@ -188,9 +184,10 @@ public class UserConnectionAnalyzer {
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
 				usersIds = twitter.getFollowersIDs(screenName, cursor);
 				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
-				
+
 				for (long id : usersIds.getIDs()) {
-					followersSet.add(new FollowerIdDto(id,currentUser.getId()));
+					followersSet
+							.add(new FollowerIdDto(id, currentUser.getId()));
 				}
 				currentUser.getFollowersIds().addAll(followersSet);
 				try {
@@ -202,7 +199,7 @@ public class UserConnectionAnalyzer {
 				usersIds = twitter.getFriendsIDs(screenName, cursor);
 				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
 				for (long id : usersIds.getIDs()) {
-					friendsSet.add(new FriendIdDto(id,currentUser.getId()));
+					friendsSet.add(new FriendIdDto(id, currentUser.getId()));
 				}
 				currentUser.getFriendsIds().addAll(friendsSet);
 				try {
@@ -236,11 +233,11 @@ public class UserConnectionAnalyzer {
 						continue;
 					}
 					UserDto user = new UserDto(u);
-					user.setConnectionDepth(connectionDepth);
+					user.setConnectionDepth(connectionDepth - 1);
 					countUsers++;
 					try {
 						session.saveOrUpdate(user);
-						
+
 					} catch (NonUniqueObjectException e) {
 						UserDto existingUser = (UserDto) session.get(
 								UserDto.class, user.getId());
@@ -258,8 +255,7 @@ public class UserConnectionAnalyzer {
 									.getCurrentSession();
 							transaction = session.beginTransaction();
 						}
-						collectData(user.getScreenName(), connectionDepth - 1,
-								type);
+						collectData(user.getScreenName(), connectionDepth-1, type);
 					}
 
 				}
@@ -274,20 +270,20 @@ public class UserConnectionAnalyzer {
 		transaction = session.beginTransaction();
 		twitter = TwitterFactory.getSingleton();
 		countUsers = 0;
-		
+
 		String screenName = "diwakarsapan";
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		
+
 		try {
 			UserDto u = new UserDto(twitter.showUser(screenName));
 			u.setConnectionDepth(2);
 			session.saveOrUpdate(u);
-//			countUsers++;
+			// countUsers++;
 		} catch (TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		uca.collectData(screenName, 2, UserConnectionAnalyzer.TRACK_BOTH);
 		transaction.commit();
 		// session.close();

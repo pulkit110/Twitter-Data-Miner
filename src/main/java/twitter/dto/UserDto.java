@@ -43,8 +43,6 @@ public class UserDto {
 	int listedCount;
 	String location;
 	String name;
-	// String prfileimageURLHttps;
-	// String profileImageURL;
 	String screenName;
 	int statusesCount;
 	String timeZone;
@@ -61,13 +59,6 @@ public class UserDto {
 	public UserDto() {
 	}
 
-	public UserDto(long id) {
-		this.id = id;
-		this.followersIds = new HashSet<FollowerIdDto>();
-		this.friendsIds = new HashSet<FriendIdDto>();
-		this.connectionDepth = 0;
-	}
-
 	public UserDto(User u) {
 		this.createdAt = (Date) u.getCreatedAt();
 		this.description = u.getDescription();
@@ -81,8 +72,6 @@ public class UserDto {
 		this.listedCount = u.getListedCount();
 		this.location = u.getLocation();
 		this.name = u.getName();
-		// this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
-		// this.profileImageURL = u.getProfileImageURL().getPath();
 		this.screenName = u.getScreenName();
 		this.statusesCount = u.getStatusesCount();
 		this.timeZone = u.getTimeZone();
@@ -188,17 +177,6 @@ public class UserDto {
 		this.name = name;
 	}
 
-	/*
-	 * public String getPrfileimageURLHttps() { return prfileimageURLHttps; }
-	 * 
-	 * public void setPrfileimageURLHttps(String prfileimageURLHttps) {
-	 * this.prfileimageURLHttps = prfileimageURLHttps; }
-	 * 
-	 * public String getProfileImageURL() { return profileImageURL; }
-	 * 
-	 * public void setProfileImageURL(String profileImageURL) {
-	 * this.profileImageURL = profileImageURL; }
-	 */
 	public String getScreenName() {
 		return screenName;
 	}
