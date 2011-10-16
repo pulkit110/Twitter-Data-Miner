@@ -1,10 +1,17 @@
 package twitter.datacollector;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.hibernate.Criteria;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
+import org.hibernate.criterion.Restrictions;
 import org.slf4j.LoggerFactory;
 
+import twitter.dto.FollowerIdDto;
+import twitter.dto.FriendIdDto;
 import twitter.dto.UserDto;
 import twitter4j.IDs;
 import twitter4j.ResponseList;
@@ -16,7 +23,7 @@ import dbutils.HibernateUtil;
 
 public class UserConnectionAnalyzer {
 
-	private static final int BATCH_SIZE = 30;
+	private static final int BATCH_SIZE = 1;
 	private static final int USER_REQUEST_LIMIT = 100;
 	private static Session session;
 	private static Transaction transaction;
@@ -45,17 +52,26 @@ public class UserConnectionAnalyzer {
 		logger.info("Collecting followers for " + screenName);
 
 		try {
-			@SuppressWarnings("unused")
-			long userId = twitter.showUser(screenName).getId();
-			try {
-				Thread.sleep(11000);
-			} catch (InterruptedException e1) {
-				logger.info(e1.getMessage());
-			}
-			
+			// long userId = twitter.showUser(screenName).getId();
+			// try {
+			// Thread.sleep(11000);
+			// } catch (InterruptedException e1) {
+			// logger.info(e1.getMessage());
+			// }
+
 			long cursor = -1;
 			long cursor1 = -1;
 
+			Criteria criteria = session.createCriteria(UserDto.class);
+			criteria.add(Restrictions.eq("screenName", screenName));
+			UserDto currentUser = (UserDto) criteria.uniqueResult();
+			if (currentUser.getFollowersIds() == null) {
+				currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
+			}
+			if (currentUser.getFriendsIds() == null) {
+				currentUser.setFriendsIds(new HashSet<FriendIdDto>());
+			}
+			
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
 				collectConnectedUsers(screenName, cursor, connectionDepth, type);
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
@@ -66,6 +82,17 @@ public class UserConnectionAnalyzer {
 				do {
 					followersIds = twitter.getFollowersIDs(screenName, cursor);
 					friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+					Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
+					Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
+					for (long id : followersIds.getIDs()) {
+						followersSet.add(new FollowerIdDto(id,currentUser.getId()));
+					}
+					for (long id : friendsIds.getIDs()) {
+						friendsSet.add(new FriendIdDto(id,currentUser.getId()));
+					}
+					currentUser.getFollowersIds().addAll(followersSet);
+					currentUser.getFriendsIds().addAll(friendsSet);
+
 					try {
 						Thread.sleep(11000);
 					} catch (InterruptedException e1) {
@@ -100,30 +127,40 @@ public class UserConnectionAnalyzer {
 								continue;
 							}
 							UserDto user = new UserDto(u);
+							user.setConnectionDepth(connectionDepth);
 							countUsers++;
 							try {
 								session.saveOrUpdate(user);
+							} catch (NonUniqueObjectException e) {
+								UserDto existingUser = (UserDto) session.get(
+										UserDto.class, user.getId());
+								if (existingUser.getConnectionDepth() < user
+										.getConnectionDepth()) {
+									session.merge(user);
+									collectData(user.getScreenName(),
+											user.getConnectionDepth() - 1, type);
+								}
+							} finally {
+								if (countUsers == BATCH_SIZE) {
+									countUsers = 0;
+									session.flush();
+									session.clear();
+									transaction.commit();
+									session = HibernateUtil.getSessionFactory()
+											.getCurrentSession();
+									transaction = session.beginTransaction();
+								}
 								collectData(user.getScreenName(),
 										connectionDepth - 1, type);
-							} catch (NonUniqueObjectException e) {
-								session.merge(user);
 							}
 
-							// Save 1 round of tweets to the database
-							if (countUsers == BATCH_SIZE) {
-								countUsers = 0;
-								session.flush();
-								session.clear();
-								transaction.commit();
-								session = HibernateUtil.getSessionFactory()
-										.getCurrentSession();
-								transaction = session.beginTransaction();
-							}
+							
 						}
 					}
 					cursor = followersIds.getNextCursor();
 					cursor1 = friendsIds.getNextCursor();
 				} while (friendsIds.hasNext() || followersIds.hasNext());
+				session.merge(currentUser);
 			}
 
 			session.flush();
@@ -138,9 +175,24 @@ public class UserConnectionAnalyzer {
 	public void collectConnectedUsers(String screenName, long cursor,
 			int connectionDepth, int type) throws TwitterException {
 		IDs usersIds;
+		Criteria criteria = session.createCriteria(UserDto.class);
+		criteria.add(Restrictions.eq("screenName", screenName));
+		UserDto currentUser = (UserDto) criteria.uniqueResult();
+		if (currentUser.getFollowersIds() == null) {
+			currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
+		}
+		if (currentUser.getFriendsIds() == null) {
+			currentUser.setFriendsIds(new HashSet<FriendIdDto>());
+		}
 		do {
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
 				usersIds = twitter.getFollowersIDs(screenName, cursor);
+				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
+				
+				for (long id : usersIds.getIDs()) {
+					followersSet.add(new FollowerIdDto(id,currentUser.getId()));
+				}
+				currentUser.getFollowersIds().addAll(followersSet);
 				try {
 					Thread.sleep(11000);
 				} catch (InterruptedException e1) {
@@ -148,6 +200,11 @@ public class UserConnectionAnalyzer {
 				}
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
 				usersIds = twitter.getFriendsIDs(screenName, cursor);
+				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
+				for (long id : usersIds.getIDs()) {
+					friendsSet.add(new FriendIdDto(id,currentUser.getId()));
+				}
+				currentUser.getFriendsIds().addAll(friendsSet);
 				try {
 					Thread.sleep(11000);
 				} catch (InterruptedException e1) {
@@ -159,6 +216,7 @@ public class UserConnectionAnalyzer {
 			}
 
 			long[] ids = usersIds.getIDs();
+
 			for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
 				int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
 						- i * USER_REQUEST_LIMIT
@@ -178,29 +236,37 @@ public class UserConnectionAnalyzer {
 						continue;
 					}
 					UserDto user = new UserDto(u);
+					user.setConnectionDepth(connectionDepth);
 					countUsers++;
 					try {
 						session.saveOrUpdate(user);
+						
+					} catch (NonUniqueObjectException e) {
+						UserDto existingUser = (UserDto) session.get(
+								UserDto.class, user.getId());
+						if (existingUser.getConnectionDepth() < user
+								.getConnectionDepth()) {
+							session.merge(user);
+						}
+					} finally {
+						if (countUsers == BATCH_SIZE) {
+							countUsers = 0;
+							session.flush();
+							session.clear();
+							transaction.commit();
+							session = HibernateUtil.getSessionFactory()
+									.getCurrentSession();
+							transaction = session.beginTransaction();
+						}
 						collectData(user.getScreenName(), connectionDepth - 1,
 								type);
-					} catch (NonUniqueObjectException e) {
-						session.merge(user);
 					}
 
-					// Save 1 round of tweets to the database
-					if (countUsers == BATCH_SIZE) {
-						countUsers = 0;
-						session.flush();
-						session.clear();
-						transaction.commit();
-						session = HibernateUtil.getSessionFactory()
-								.getCurrentSession();
-						transaction = session.beginTransaction();
-					}
 				}
 			}
 			cursor = usersIds.getNextCursor();
 		} while (usersIds.hasNext());
+		session.merge(currentUser);
 	}
 
 	public static void main(String[] args) {
@@ -208,9 +274,21 @@ public class UserConnectionAnalyzer {
 		transaction = session.beginTransaction();
 		twitter = TwitterFactory.getSingleton();
 		countUsers = 0;
-
+		
+		String screenName = "diwakarsapan";
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
-		uca.collectData("diwakarsapan", 2, UserConnectionAnalyzer.TRACK_BOTH);
+		
+		try {
+			UserDto u = new UserDto(twitter.showUser(screenName));
+			u.setConnectionDepth(2);
+			session.saveOrUpdate(u);
+//			countUsers++;
+		} catch (TwitterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		uca.collectData(screenName, 2, UserConnectionAnalyzer.TRACK_BOTH);
 		transaction.commit();
 		// session.close();
 	}

@@ -23,9 +23,10 @@
 		<level value="DEBUG" />
 		<appender-ref ref="Twitterlogs" />
 	</logger>
-
+	
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="Twitterlogs" />
 	</root>
+	
 </log4j:configuration>

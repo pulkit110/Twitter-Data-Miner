@@ -5,9 +5,16 @@ package twitter.dto;
 
 import java.net.URL;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import twitter4j.User;
@@ -18,6 +25,8 @@ import twitter4j.User;
  */
 @Entity
 @Table(name = "user")
+// @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
+// @Cacheable
 public class UserDto {
 
 	@Id
@@ -34,16 +43,29 @@ public class UserDto {
 	int listedCount;
 	String location;
 	String name;
-	//String prfileimageURLHttps;
-	//String profileImageURL;
+	// String prfileimageURLHttps;
+	// String profileImageURL;
 	String screenName;
 	int statusesCount;
 	String timeZone;
 	URL url;
 	int utcOffset;
+	int connectionDepth;
+
+	@ManyToMany(cascade = CascadeType.ALL)
+	Set<FollowerIdDto> followersIds;
+
+	@ManyToMany(cascade = CascadeType.ALL)
+	Set<FriendIdDto> friendsIds;
 
 	public UserDto() {
+	}
 
+	public UserDto(long id) {
+		this.id = id;
+		this.followersIds = new HashSet<FollowerIdDto>();
+		this.friendsIds = new HashSet<FriendIdDto>();
+		this.connectionDepth = 0;
 	}
 
 	public UserDto(User u) {
@@ -59,13 +81,15 @@ public class UserDto {
 		this.listedCount = u.getListedCount();
 		this.location = u.getLocation();
 		this.name = u.getName();
-		//this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
-		//this.profileImageURL = u.getProfileImageURL().getPath();
+		// this.prfileimageURLHttps = u.getProfileImageUrlHttps().getPath();
+		// this.profileImageURL = u.getProfileImageURL().getPath();
 		this.screenName = u.getScreenName();
 		this.statusesCount = u.getStatusesCount();
 		this.timeZone = u.getTimeZone();
 		this.url = u.getURL();
 		this.utcOffset = u.getUtcOffset();
+		this.followersIds = new HashSet<FollowerIdDto>();
+		this.friendsIds = new HashSet<FriendIdDto>();
 	}
 
 	public Date getCreatedAt() {
@@ -163,23 +187,18 @@ public class UserDto {
 	public void setName(String name) {
 		this.name = name;
 	}
-/*
-	public String getPrfileimageURLHttps() {
-		return prfileimageURLHttps;
-	}
 
-	public void setPrfileimageURLHttps(String prfileimageURLHttps) {
-		this.prfileimageURLHttps = prfileimageURLHttps;
-	}
-
-	public String getProfileImageURL() {
-		return profileImageURL;
-	}
-
-	public void setProfileImageURL(String profileImageURL) {
-		this.profileImageURL = profileImageURL;
-	}
-*/
+	/*
+	 * public String getPrfileimageURLHttps() { return prfileimageURLHttps; }
+	 * 
+	 * public void setPrfileimageURLHttps(String prfileimageURLHttps) {
+	 * this.prfileimageURLHttps = prfileimageURLHttps; }
+	 * 
+	 * public String getProfileImageURL() { return profileImageURL; }
+	 * 
+	 * public void setProfileImageURL(String profileImageURL) {
+	 * this.profileImageURL = profileImageURL; }
+	 */
 	public String getScreenName() {
 		return screenName;
 	}
@@ -218,6 +237,30 @@ public class UserDto {
 
 	public void setUtcOffset(int utcOffset) {
 		this.utcOffset = utcOffset;
+	}
+
+	public int getConnectionDepth() {
+		return connectionDepth;
+	}
+
+	public void setConnectionDepth(int connectionDepth) {
+		this.connectionDepth = connectionDepth;
+	}
+
+	public Set<FollowerIdDto> getFollowersIds() {
+		return followersIds;
+	}
+
+	public void setFollowersIds(Set<FollowerIdDto> followersIds) {
+		this.followersIds = followersIds;
+	}
+
+	public Set<FriendIdDto> getFriendsIds() {
+		return friendsIds;
+	}
+
+	public void setFriendsIds(Set<FriendIdDto> friendsIds) {
+		this.friendsIds = friendsIds;
 	}
 
 }

@@ -4,6 +4,17 @@
           "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
 	<session-factory>
+
+<!-- 
+		<property name="cache.use_second_level_cache">true</property>
+		<property name="cache.use_query_cache">true</property>
+		<property name="cache.region.factory_class">org.hibernate.cache.jbc2.JndiMultiplexedJBossCacheRegionFactory</property>
+		<property name="cache.region.jbc2.cachefactory">java:CacheManager</property>
+		<property name="cache.region.jbc2.cfg.entity">mvcc-entity</property>
+		<property name="cache.region.jbc2.cfg.query">local-query</property>
+		<property name="cache.region_prefix">twitter</property>
+ -->
+
 		<property name="connection.url">jdbc:mysql://localhost/twitter</property>
 		<property name="connection.username">root</property>
 		<property name="connection.password">password</property>
@@ -20,13 +31,15 @@
 		<property name="hibernate.jdbc.batch_size">30</property>
 		<property name="current_session_context_class">thread</property>
 
-		
+
 		<!-- Mapping files will go here.... -->
 		<mapping class="twitter.dto.StatusDto" />
 		<mapping class="twitter.dto.PlaceDto" />
 		<mapping class="twitter.dto.UserDto" />
-		<!--   mapping class="twitter.dto.GeolocationDto" / -->
-		
-		
+		<mapping class="twitter.dto.FollowerIdDto" />
+		<mapping class="twitter.dto.FriendIdDto" />
+		<!-- mapping class="twitter.dto.GeolocationDto" / -->
+
+
 	</session-factory>
 </hibernate-configuration>
