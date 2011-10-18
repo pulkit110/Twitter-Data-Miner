@@ -17,23 +17,23 @@ import org.hibernate.annotations.GenerationTime;
  * 
  */
 @Entity
-@Table(name = "friendsId")
+@Table(name = "mentionEntity")
 public class MentionEntityDto {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	long generatedId;
 
 	String mentionedScreenName;
-//	long mentionedStatusID;
+	long statusId;
 
 	public MentionEntityDto() {
 		super();
 	}
 
-	public MentionEntityDto(String mentionedScreenName, long mentionedStatusID) {
+	public MentionEntityDto(String mentionedScreenName, long statusID) {
 		super();
 		this.mentionedScreenName = mentionedScreenName;
-//		this.mentionedStatusID = mentionedStatusID;
+		this.statusId = statusID;
 	}
 
 	public String getMentionedScreenName() {
@@ -44,11 +44,11 @@ public class MentionEntityDto {
 		this.mentionedScreenName = mentionedScreenName;
 	}
 
-//	public long getMentionedStatusID() {
-//		return mentionedStatusID;
-//	}
+	public long getMentionedStatusID() {
+		return statusId;
+	}
 
-	public void setMentionedStatusID(long mentionedStatusID) {
-//		this.mentionedStatusID = mentionedStatusID;
+	public void setMentionedStatusID(long statusID) {
+		this.statusId = statusID;
 	}
 }
