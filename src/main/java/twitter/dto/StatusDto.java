@@ -133,9 +133,12 @@ public class StatusDto {
 				this.userMentionIds.add(u.getId());
 			}
 		}
-		
+
 		this.setNew(true);
 		this.mentionedEntity = new HashSet<MentionEntityDto>();
+		for (UserMentionEntity um: status.getUserMentionEntities()) {
+			this.mentionedEntity.add(new MentionEntityDto(um.getScreenName(),status.getId()));				
+		}		
 	}
 
 	public Long getId() {

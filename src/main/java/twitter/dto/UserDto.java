@@ -9,11 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
@@ -25,8 +22,6 @@ import twitter4j.User;
  */
 @Entity
 @Table(name = "user")
-// @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
-// @Cacheable
 public class UserDto {
 
 	@Id
