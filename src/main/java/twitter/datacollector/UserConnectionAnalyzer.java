@@ -1,6 +1,8 @@
 package twitter.datacollector;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Criteria;
@@ -50,134 +52,171 @@ public class UserConnectionAnalyzer {
 
 		logger.info("Collecting followers for " + screenName);
 
-		try {
+		long cursor = -1;
+		long cursor1 = -1;
 
-			long cursor = -1;
-			long cursor1 = -1;
+		Criteria criteria = session.createCriteria(UserDto.class);
+		criteria.add(Restrictions.eq("screenName", screenName));
+		UserDto currentUser = (UserDto) criteria.uniqueResult();
+		currentUser.setVisited(true);
 
-			Criteria criteria = session.createCriteria(UserDto.class);
-			criteria.add(Restrictions.eq("screenName", screenName));
-			UserDto currentUser = (UserDto) criteria.uniqueResult();
-			currentUser.setVisited(true);
+		if (currentUser.getFollowersIds() == null) {
+			currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
+		}
+		if (currentUser.getFriendsIds() == null) {
+			currentUser.setFriendsIds(new HashSet<FriendIdDto>());
+		}
 
-			if (currentUser.getFollowersIds() == null) {
-				currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
-			}
-			if (currentUser.getFriendsIds() == null) {
-				currentUser.setFriendsIds(new HashSet<FriendIdDto>());
-			}
+		if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
+			collectConnectedUsers(screenName, cursor, connectionDepth, type);
+		} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
+			collectConnectedUsers(screenName, cursor, connectionDepth, type);
+		} else {
+			List<UserDto> newUsers = new ArrayList<UserDto>();
 
-			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
-				collectConnectedUsers(screenName, cursor, connectionDepth, type);
-			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
-				collectConnectedUsers(screenName, cursor, connectionDepth, type);
-			} else {
-				IDs followersIds;
-				IDs friendsIds;
-				do {
-					followersIds = twitter.getFollowersIDs(screenName, cursor);
-					friendsIds = twitter.getFriendsIDs(screenName, cursor1);
-
-					Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
-					Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
-					for (long id : followersIds.getIDs()) {
-						followersSet.add(new FollowerIdDto(id, currentUser
-								.getId()));
+			IDs followersIds = null;
+			IDs friendsIds = null;
+			do {
+				boolean successful = false;
+				while (!successful) {
+					try {
+						followersIds = twitter.getFollowersIDs(screenName, cursor);
+						friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+						successful = true;
+					} catch (TwitterException e) {
+						successful = false;
+						e.printStackTrace();
+						if (!e.isCausedByNetworkIssue()) {
+							//User might be protected; There is nothing we can do about it
+							break;
+						}
+						try {
+							Thread.sleep(12000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
 					}
-					for (long id : friendsIds.getIDs()) {
-						friendsSet
-								.add(new FriendIdDto(id, currentUser.getId()));
-					}
-					currentUser.getFollowersIds().addAll(followersSet);
-					currentUser.getFriendsIds().addAll(friendsSet);
+				}
+				
+				if (!successful) {
+					break;
+				}
 
+				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
+				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
+				for (long id : followersIds.getIDs()) {
+					followersSet
+							.add(new FollowerIdDto(id, currentUser.getId()));
+				}
+				for (long id : friendsIds.getIDs()) {
+					friendsSet.add(new FriendIdDto(id, currentUser.getId()));
+				}
+				currentUser.getFollowersIds().addAll(followersSet);
+				currentUser.getFriendsIds().addAll(friendsSet);
+
+				try {
+					Thread.sleep(11000);
+				} catch (InterruptedException e1) {
+					logger.info(e1.getMessage());
+				}
+				long[] followerIds = followersIds.getIDs();
+				long[] friendIds = friendsIds.getIDs();
+				long[] ids = new long[followerIds.length + friendIds.length];
+				for (int i = 0; i < followerIds.length; ++i) {
+					ids[i] = followerIds[i];
+				}
+				for (int i = 0; i < friendIds.length; ++i) {
+					ids[followerIds.length + i] = friendIds[i];
+				}
+				// break ids array into arrays of size of user request
+				// limit(100)
+				for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
+					int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
+							- i * USER_REQUEST_LIMIT
+							: USER_REQUEST_LIMIT;
+					long[] idsSubArray = new long[length];
+					System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray,
+							0, length);
+					ResponseList<User> users = null;
+					successful = false;
+					while (!successful) {
+						try {
+							users = twitter.lookupUsers(idsSubArray);
+							successful = true;
+						} catch (TwitterException e) {
+							successful = false;
+							e.printStackTrace();
+							try {
+								Thread.sleep(12000);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
+						}
+					}
+					
 					try {
 						Thread.sleep(11000);
 					} catch (InterruptedException e1) {
 						logger.info(e1.getMessage());
 					}
-					long[] followerIds = followersIds.getIDs();
-					long[] friendIds = friendsIds.getIDs();
-					long[] ids = new long[followerIds.length + friendIds.length];
-					for (int i = 0; i < followerIds.length; ++i) {
-						ids[i] = followerIds[i];
-					}
-					for (int i = 0; i < friendIds.length; ++i) {
-						ids[followerIds.length + i] = friendIds[i];
-					}
-					// break ids array into arrays of size of user request
-					// limit(100)
-					for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
-						int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
-								- i * USER_REQUEST_LIMIT
-								: USER_REQUEST_LIMIT;
-						long[] idsSubArray = new long[length];
-						System.arraycopy(ids, i * USER_REQUEST_LIMIT,
-								idsSubArray, 0, length);
-						ResponseList<User> users = twitter
-								.lookupUsers(idsSubArray);
-						try {
-							Thread.sleep(11000);
-						} catch (InterruptedException e1) {
-							logger.info(e1.getMessage());
+					for (User u : users) {
+						if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
+								|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
+							continue;
 						}
-						for (User u : users) {
-							if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
-									|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
-								continue;
-							}
-							UserDto user = new UserDto(u);
-							user.setConnectionDepth(connectionDepth - 1);
-							countUsers++;
-							boolean visitedIncorrectly = false;
-							boolean newVisit = false;
-							UserDto existingUser = (UserDto) session.get(
-									UserDto.class, user.getId());
-							if (existingUser == null) {
-								session.saveOrUpdate(user);
-								newVisit = true;
-							} else {
-								if (existingUser.getConnectionDepth() < user
-										.getConnectionDepth()) {
-									visitedIncorrectly = true;
-									session.merge(user);
-								}
-							}
+						UserDto user = new UserDto(u);
+						user.setConnectionDepth(connectionDepth - 1);
+						countUsers++;
+						newUsers.add(user);
 
-							if (countUsers == BATCH_SIZE) {
-								countUsers = 0;
-								session.flush();
-								session.clear();
-								transaction.commit();
-								session = HibernateUtil.getSessionFactory()
-										.getCurrentSession();
-								transaction = session.beginTransaction();
-							}
-
-							if (newVisit || visitedIncorrectly) {
-								collectData(user.getScreenName(),
-										connectionDepth - 1, type);
+						boolean visitedIncorrectly = false;
+						boolean newVisit = false;
+						UserDto existingUser = (UserDto) session.get(
+								UserDto.class, user.getId());
+						if (existingUser == null) {
+							session.saveOrUpdate(user);
+							newVisit = true;
+						} else {
+							if (existingUser.getConnectionDepth() < user
+									.getConnectionDepth()) {
+								visitedIncorrectly = true;
+								session.merge(user);
 							}
 						}
+
+						if (countUsers == BATCH_SIZE) {
+							countUsers = 0;
+							session.flush();
+							session.clear();
+							transaction.commit();
+							session = HibernateUtil.getSessionFactory()
+									.getCurrentSession();
+							transaction = session.beginTransaction();
+						}
+
+						// if (newVisit || visitedIncorrectly) {
+						// collectData(user.getScreenName(),
+						// connectionDepth - 1, type);
+						// }
 					}
-					cursor = followersIds.getNextCursor();
-					cursor1 = friendsIds.getNextCursor();
-				} while (friendsIds.hasNext() || followersIds.hasNext());
-				session.merge(currentUser);
+				}
+				cursor = followersIds.getNextCursor();
+				cursor1 = friendsIds.getNextCursor();
+			} while (friendsIds.hasNext() || followersIds.hasNext());
+			session.merge(currentUser);
+
+			for (UserDto u : newUsers) {
+				collectData(u.getScreenName(), u.getConnectionDepth(), type);
 			}
-
-			session.flush();
-			session.clear();
-
-		} catch (TwitterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
+
+		session.flush();
+		session.clear();
 	}
 
 	public void collectConnectedUsers(String screenName, long cursor,
-			int connectionDepth, int type) throws TwitterException {
-		IDs usersIds;
+			int connectionDepth, int type) {
+		IDs usersIds = null;
 		Criteria criteria = session.createCriteria(UserDto.class);
 		criteria.add(Restrictions.eq("screenName", screenName));
 		UserDto currentUser = (UserDto) criteria.uniqueResult();
@@ -188,9 +227,33 @@ public class UserConnectionAnalyzer {
 		if (currentUser.getFriendsIds() == null) {
 			currentUser.setFriendsIds(new HashSet<FriendIdDto>());
 		}
+		List<UserDto> newUsers = new ArrayList<UserDto>();
+
 		do {
 			if (type == UserConnectionAnalyzer.TRACK_FOLLOWERS) {
-				usersIds = twitter.getFollowersIDs(screenName, cursor);
+				boolean successful = false;
+				while (!successful) {
+					try {
+						usersIds = twitter.getFollowersIDs(screenName, cursor);
+						successful = true;
+					} catch (TwitterException e) {
+						successful = false;
+						e.printStackTrace();
+						if (!e.isCausedByNetworkIssue()) {
+							//User might be protected; There is nothing we can do about it
+							break;
+						}
+						try {
+							Thread.sleep(12000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+				if (!successful) {
+					logger.error("Skipping user " + currentUser.getScreenName());
+					break;
+				}
 				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
 
 				for (long id : usersIds.getIDs()) {
@@ -204,7 +267,32 @@ public class UserConnectionAnalyzer {
 					logger.info(e1.getMessage());
 				}
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
-				usersIds = twitter.getFriendsIDs(screenName, cursor);
+				boolean successful = false;
+				while (!successful) {
+					try {
+						usersIds = twitter.getFriendsIDs(screenName, cursor);
+						successful = true;
+					} catch (TwitterException e) {
+						successful = false;
+						e.printStackTrace();
+						
+						if (!e.isCausedByNetworkIssue()) {
+							//User might be protected; There is nothing we can do about it
+							break;
+						}
+						try {
+							Thread.sleep(12000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+
+				if (!successful) {
+					logger.error("Skipping user " + currentUser.getScreenName());
+					break;
+				}
+				
 				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
 				for (long id : usersIds.getIDs()) {
 					friendsSet.add(new FriendIdDto(id, currentUser.getId()));
@@ -229,7 +317,23 @@ public class UserConnectionAnalyzer {
 				long[] idsSubArray = new long[length];
 				System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray, 0,
 						length);
-				ResponseList<User> users = twitter.lookupUsers(idsSubArray);
+				ResponseList<User> users = null;
+				boolean successful = false;
+				while (!successful) {
+					try {
+						users = twitter.lookupUsers(idsSubArray);
+						successful = true;
+					} catch (TwitterException e) {
+						successful = false;
+						e.printStackTrace();
+						try {
+							Thread.sleep(12000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+
 				try {
 					Thread.sleep(11000);
 				} catch (InterruptedException e1) {
@@ -243,18 +347,14 @@ public class UserConnectionAnalyzer {
 					UserDto user = new UserDto(u);
 					user.setConnectionDepth(connectionDepth - 1);
 					countUsers++;
-
-					boolean visitedIncorrectly = false;
-					boolean newVisit = false;
+					newUsers.add(user);
 					UserDto existingUser = (UserDto) session.get(UserDto.class,
 							user.getId());
 					if (existingUser == null) {
 						session.saveOrUpdate(user);
-						newVisit = true;
 					} else {
 						if (existingUser.getConnectionDepth() < user
 								.getConnectionDepth()) {
-							visitedIncorrectly = true;
 							session.merge(user);
 						}
 					}
@@ -268,16 +368,21 @@ public class UserConnectionAnalyzer {
 						transaction = session.beginTransaction();
 					}
 
-					if (newVisit || visitedIncorrectly) {
-						collectData(user.getScreenName(), connectionDepth - 1,
-								type);
-					}
+					// if (newVisit || visitedIncorrectly) {
+					// collectData(user.getScreenName(), connectionDepth - 1,
+					// type);
+					// }
 
 				}
 			}
 			cursor = usersIds.getNextCursor();
 		} while (usersIds.hasNext());
 		session.merge(currentUser);
+
+		for (UserDto u : newUsers) {
+			collectData(u.getScreenName(), u.getConnectionDepth(), type);
+		}
+
 	}
 
 	public static void main(String[] args) {
@@ -286,7 +391,7 @@ public class UserConnectionAnalyzer {
 		twitter = TwitterFactory.getSingleton();
 		countUsers = 0;
 
-		String screenName = "__Neha";
+		String screenName = "EPFLNews";
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
 
 		try {

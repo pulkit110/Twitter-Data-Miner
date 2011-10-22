@@ -41,7 +41,7 @@ public class UserDto {
 	String screenName;
 	int statusesCount;
 	String timeZone;
-	URL url;
+	String url;
 	int utcOffset;
 	int connectionDepth;
 	boolean visited;
@@ -72,7 +72,9 @@ public class UserDto {
 		this.screenName = u.getScreenName();
 		this.statusesCount = u.getStatusesCount();
 		this.timeZone = u.getTimeZone();
-		this.url = u.getURL();
+		if (u.getURL() != null) {
+			this.url = u.getURL().toString();
+		}
 		this.utcOffset = u.getUtcOffset();
 		this.followersIds = new HashSet<FollowerIdDto>();
 		this.friendsIds = new HashSet<FriendIdDto>();
@@ -199,11 +201,11 @@ public class UserDto {
 		this.timeZone = timeZone;
 	}
 
-	public URL getUrl() {
+	public String getUrl() {
 		return url;
 	}
 
-	public void setUrl(URL url) {
+	public void setUrl(String url) {
 		this.url = url;
 	}
 
