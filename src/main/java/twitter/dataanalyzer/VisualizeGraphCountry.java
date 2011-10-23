@@ -29,9 +29,10 @@ public class VisualizeGraphCountry {
 		Transaction transaction = session.beginTransaction();
 		
 		Map<String, Integer> frequencyByCountry = new Hashtable<String, Integer>();
+		Map<String, String> countryByCode = new Hashtable<String, String>(); 
 
 		Query q = session.createQuery("from UserDto");
-		q.setMaxResults(1000);
+		q.setMaxResults(95000);
 		List<UserDto> users = q.list();
 		
 		for (UserDto u : users) {
@@ -41,11 +42,12 @@ public class VisualizeGraphCountry {
 			
 			GAddress gAddress = GCoder.geocode(u.getLocation());
 			if (gAddress != null) {
-				String countryName = gAddress.getCountryName();
-				if (frequencyByCountry.containsKey(countryName)) {
-					frequencyByCountry.put(countryName, frequencyByCountry.get(countryName)+1);
+				String countryCode = gAddress.getCountryCode();
+				countryByCode.put(countryCode, gAddress.getCountryName());
+				if (frequencyByCountry.containsKey(countryCode)) {
+					frequencyByCountry.put(countryCode, frequencyByCountry.get(countryCode)+1);
 				} else {
-					frequencyByCountry.put(countryName, 1);
+					frequencyByCountry.put(countryCode, 1);
 				}
 			}
 		}
@@ -53,8 +55,10 @@ public class VisualizeGraphCountry {
 		FileWriter fw = new FileWriter("UserCountryData.csv");
 		BufferedWriter out = new BufferedWriter(fw);
 		
-		for (String country : frequencyByCountry.keySet()) {
-			out.write(country + "," + frequencyByCountry.get(country) + "," + country);
+		out.write("Text,Number,Location\n");
+		
+		for (String countryCode : frequencyByCountry.keySet()) {
+			out.write(countryByCode.get(countryCode) + "," + frequencyByCountry.get(countryCode) + "," + countryCode);
 			out.write("\n");
 		}
 		
