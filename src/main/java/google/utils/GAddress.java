@@ -4,6 +4,8 @@ package google.utils;
 public class GAddress {
 	public String address;
 	public String fullAddress;
+	public String countryName;
+	public String countryCode;
 	public String zipCode;
 	public String city;
 	public String state;
@@ -64,5 +66,21 @@ public class GAddress {
 
 	public void setLng(double lng) {
 		this.lng = lng;
+	}
+
+	public String getCountryName() {
+		return countryName;
+	}
+
+	public void setCountryName(String countryName) {
+		this.countryName = countryName;
+	}
+
+	public String getCountryCode() {
+		return countryCode;
+	}
+
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
 	}
 }

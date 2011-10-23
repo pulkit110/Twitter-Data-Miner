@@ -9,10 +9,11 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
+import org.hibernate.impl.QueryImpl;
 
 public class GCoder {
 	private static final String URL = "http://maps.google.com/maps/geo?output=json";
-	private static final String DEFAULT_KEY = "ABQIAAAAdaexNcmdTGjUOs3Pu_MykhSRCIgguXOLihS2HlrF0GGQ4cYAHhRiV9uFpf5zPfZhTL9-V2UfCkjgBA";
+	private static final String DEFAULT_KEY = "AIzaSyCyVG8EIT-ICXO5N44ahq-IXUtzK9PVICw";
 
 	public static GAddress geocode(String address, String key) throws Exception {
 		URL url = new URL(URL + "&q=" + URLEncoder.encode(address, "UTF-8")
@@ -25,7 +26,7 @@ public class GCoder {
 		String s = output.toString();
 		GAddress gaddr = new GAddress();
 		JSONObject json = JSONObject.fromObject(output.toString());
-		if(json.getJSONObject("Status").getInt("code") != 200) {
+		if (json.getJSONObject("Status").getInt("code") != 200) {
 			return null;
 		}
 		JSONObject placemark = (JSONObject) query(json, "Placemark[0]");
@@ -54,6 +55,9 @@ public class GCoder {
 		gaddr.setLng(Double
 				.parseDouble(query(placemark, "Point.coordinates[0]")
 						.toString()));
+
+		gaddr.setCountryName(query(placemark, "AddressDetails.Country.CountryName").toString());
+		gaddr.setCountryCode(query(placemark, "AddressDetails.Country.CountryNameCode").toString());
 		return gaddr;
 	}
 
@@ -95,3 +99,4 @@ public class GCoder {
 		System.out.println(GCoder.geocode("94103"));
 	}
 }
+// ABQIAAAAdaexNcmdTGjUOs3Pu_MykhSRCIgguXOLihS2HlrF0GGQ4cYAHhRiV9uFpf5zPfZhTL9-V2UfCkjgBA

@@ -146,12 +146,19 @@ public class UserConnectionAnalyzer {
 						} catch (TwitterException e) {
 							successful = false;
 							e.printStackTrace();
+							if (!e.isCausedByNetworkIssue()) {
+								//Exception might be because of non-network issues like invalid user account
+								break;
+							}
 							try {
 								Thread.sleep(12000);
 							} catch (InterruptedException e1) {
 								e1.printStackTrace();
 							}
 						}
+					}
+					if (!successful) {
+						continue;
 					}
 					
 					try {
@@ -326,12 +333,19 @@ public class UserConnectionAnalyzer {
 					} catch (TwitterException e) {
 						successful = false;
 						e.printStackTrace();
+						if (!e.isCausedByNetworkIssue()) {
+							//Exception might be because of non-network issues like invalid user account
+							break;
+						}
 						try {
 							Thread.sleep(12000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
 					}
+				}
+				if (!successful) {
+					continue;
 				}
 
 				try {
