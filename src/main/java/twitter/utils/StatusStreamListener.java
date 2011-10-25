@@ -6,13 +6,15 @@ package twitter.utils;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 
-import dbutils.HibernateUtil;
-
+import twitter.dto.PlaceDto;
 import twitter.dto.StatusDto;
+import twitter.dto.UserDto;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
+import dbutils.HibernateUtil;
 
 /**
  * @author pulkit and sapan
@@ -22,11 +24,11 @@ public class StatusStreamListener implements StatusListener {
 
 	static int BATCH_SIZE = 1;
 	static int COMMIT_SIZE = 10;
-	private static Session session = HibernateUtil.getSessionFactory()
+	private  Session session = HibernateUtil.getSessionFactory()
 			.getCurrentSession();
-	private static Transaction transaction = session.beginTransaction();
-	static int countTweets = 0;
-	
+	private  Transaction transaction = session.beginTransaction();
+	 int countTweets = 0;
+
 	private int type;
 
 	/*
@@ -51,20 +53,69 @@ public class StatusStreamListener implements StatusListener {
 	 */
 	public void onStatus(Status status) {
 		countTweets++;
+
+		boolean existingStatusFlag = false;
+		
+		StatusDto existingStatus = (StatusDto) session.get(StatusDto.class,
+				status.getId());
+
 		StatusDto statusDto = new StatusDto(status);
-		statusDto.setType(type);
-		try {
-			session.saveOrUpdate(statusDto);
-		} catch (NonUniqueObjectException e) {
-			StatusDto existingStatus = (StatusDto) session.get(StatusDto.class, statusDto.getId());
-			if (existingStatus != null) {
-				statusDto.setType(existingStatus.getType()|this.type);
+
+		if (existingStatus != null) {
+			existingStatusFlag = true;
+			statusDto.setType(existingStatus.getType() | this.type);
+//			statusDto.setPlace(existingStatus.getPlace());
+//			statusDto.setUser(existingStatus.getUser());
+		} 
+//		else {
+//			statusDto.setType(type);
+//			if (status.getPlace() != null) {
+//				PlaceDto place = (PlaceDto) session.get(PlaceDto.class, status
+//						.getPlace().getId());
+//				if (place == null) {
+//					place = new PlaceDto(status.getPlace());
+////					try {
+////						session.saveOrUpdate(place);
+////					} catch (NonUniqueObjectException e) {
+////						session.merge(place);
+////					}
+//					statusDto.setPlace(place);
+//				} else {
+//					statusDto.setPlace(place);
+//				}
+//			}
+//
+//			if (status.getUser() != null) {
+//				UserDto user = (UserDto) session.get(UserDto.class, status
+//						.getUser().getId());
+//				if (user == null) {
+//					user = new UserDto(status.getUser());
+////					try {
+////						session.saveOrUpdate(user);
+////					} catch (NonUniqueObjectException e) {
+////						session.merge(user);
+////					}
+//					statusDto.setUser(user);
+//				} else {
+//					statusDto.setUser(user);
+//				}
+//			}
+//		}
+
+		if (existingStatusFlag) {
+			try {
+				session.merge(statusDto);
+			} catch (NonUniqueObjectException e) {
+				session.merge(statusDto);
+			} catch (ConstraintViolationException e1) {
+				session.merge(statusDto);
 			}
+		} else {
 			session.merge(statusDto);
 		}
 
 		// Save 1 round of tweets to the database
-		if (countTweets == BATCH_SIZE) {
+		if (countTweets >= BATCH_SIZE) {
 			countTweets = 0;
 			session.flush();
 			session.clear();
@@ -86,10 +137,8 @@ public class StatusStreamListener implements StatusListener {
 	 * @see twitter4j.StreamListener#onException(java.lang.Exception)
 	 */
 	public void onException(Exception ex) {
-		// TODO Auto-generated method stub
-
+		ex.printStackTrace();
 	}
-
 
 	public int getType() {
 		return type;

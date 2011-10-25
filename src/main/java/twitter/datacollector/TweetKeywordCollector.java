@@ -18,9 +18,13 @@ public class TweetKeywordCollector {
 		setOAuthConsumerSecret("qJYOEhGpD8ccHSJ8ERAxwoZtUnucVstyTRCIH1Kio").setUseSSL(true).setDebugEnabled(true);
 		
 		TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
-		String[] keywords = {
-				"apple"
-		};
+		String[] keywords = { "apple", "mac", "macbook", "macbookair",
+			"macbookpro", "os x", "osx", "osxlion", "ipod", "ipodshuffle",
+			"ipodnano", "ipodclassic", "ipodtouch", "itunes", "iphone",
+			"iphone3", "iphone3s", "iphone4", "iphone4s", "iphone5", "ios",
+			"ios4", "ios5", "ipad", "ipad2", "ipad3", "manchesterunited",
+			"manchester united", "manchester utd", "man united", "manutd",
+		"man utd", "manu", "mufc" };
 		TwitterStreamUtils.filterByKeywords(twitterStream, keywords);
 	}
 

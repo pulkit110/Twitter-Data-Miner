@@ -31,6 +31,10 @@ public class PlaceDto {
 	String fullName;
 	String url;
 
+	public PlaceDto() {
+		super();
+	};
+	
 	public PlaceDto(Place place) {
 		id = place.getId();
 		countryCode = place.getCountryCode();
