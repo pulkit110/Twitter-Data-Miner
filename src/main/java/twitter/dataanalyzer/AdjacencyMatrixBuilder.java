@@ -55,13 +55,15 @@ public class AdjacencyMatrixBuilder {
 	private static void constructMatrix(Session session,
 			Transaction transaction, Class<UserDto> tableClass)
 			throws IOException {
-		int rowsCount = (int) AdjacencyMatrixBuilder.countRows(session,
-				UserDto.class);
-		boolean[][] userRelations = new boolean[rowsCount][rowsCount];
+		// int rowsCount = (int) AdjacencyMatrixBuilder.countRows(session,
+		// UserDto.class);
+
 		Map<Long, Integer> m = new HashMap<Long, Integer>();
 
 		Integer i = 0;
-		List<UserDto> users = session.createQuery("from UserDto").list();
+		List<UserDto> users = session.createQuery("from UserDto where connectionDepth>0").list();
+
+		boolean[][] userRelations = new boolean[users.size()][users.size()];
 
 		FileWriter fw = new FileWriter("AdjacencyList.csv");
 		BufferedWriter out = new BufferedWriter(fw);
@@ -89,34 +91,42 @@ public class AdjacencyMatrixBuilder {
 			}
 		}
 
-		for (int k = 0; k < userRelations.length; ++k) {
-			out.write(users.get(k).getScreenName());
-			for (int j = 0; j < userRelations[k].length; ++j) {
-				if (userRelations[k][j]) {
-					out.write(";" + users.get(j).getScreenName());
-				}
-			}
-			out.write("\n");
-		}
-
-		// try {
-		// FileWriter fw = new FileWriter("userRelations.txt");
-		// BufferedWriter out = new BufferedWriter(fw);
 		// for (int k = 0; k < userRelations.length; ++k) {
+		// out.write(users.get(k).getScreenName());
 		// for (int j = 0; j < userRelations[k].length; ++j) {
 		// if (userRelations[k][j]) {
-		// out.write(1 + " ");
-		// } else {
-		// out.write(0 + " ");
+		// out.write(";" + users.get(j).getScreenName());
 		// }
-		//
 		// }
 		// out.write("\n");
 		// }
-		// } catch (IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
+
+		try {
+			FileWriter fw1 = new FileWriter("userRelations.csv");
+			FileWriter fw2 = new FileWriter("userList.txt");
+			BufferedWriter out1 = new BufferedWriter(fw1);
+			BufferedWriter out2 = new BufferedWriter(fw2);
+			for (int k = 0; k < userRelations.length; ++k) {
+				// out2.write(users.get(k).getScreenName() + "\n");
+				System.out.println(k);
+				for (int j = 0; j < userRelations[k].length; ++j) {
+				//	System.out.println(j);
+					if (userRelations[k][j]) {
+						// out1.write(1 + " ");
+						out1.write(k + " " + j + "\n");
+						System.out.println(k + " " + j + "\n");
+
+					} else {
+						// out1.write(0 + " ");
+					}
+
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Error!!!");
+			e.printStackTrace();
+		}
 
 	}
 
