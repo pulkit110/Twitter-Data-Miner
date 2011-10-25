@@ -19,8 +19,11 @@ public class TweetLocationCollector {
 				Twitter4jProperties.ACCESS_TOKEN_SECRET).setUseSSL(true)
 				.setDebugEnabled(true);
 
-		double[][] locationCoordinates = { { -122.75, 36.8 },
-				{ -121.75, 37.8 }, { -74, 40 }, { -73, 41 } };
+		double[][] locationCoordinates = { {-0.3475,51.3695},{0.0915,51.6435},
+			{ -74.11,40.633} ,{-73.89,40.800334 },
+			{ 2.241,48.784},{2.460666,48.929334 },
+			{-122.529,37.6925},{-122.3094,37.8661 },
+			{72.55,18.875},{73.15,19.275 }};
 
 		TwitterStream twitterStream = new TwitterStreamFactory(cb.build())
 				.getInstance();

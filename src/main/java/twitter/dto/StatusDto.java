@@ -90,9 +90,9 @@ public class StatusDto {
 		this.setInReplyToScreenName(status.getInReplyToScreenName());
 		this.setInReplyToStatusId(status.getInReplyToStatusId());
 		this.setInReplyToUserId(status.getInReplyToUserId());
-		if (status.getPlace() != null) {
-			this.setPlace(new PlaceDto(status.getPlace()));
-		}
+//		if (status.getPlace() != null) {
+//			this.setPlace(new PlaceDto(status.getPlace()));
+//		}
 		this.setRetweetCount(status.getRetweetCount());
 		this.setSource(status.getSource());
 		this.setText(status.getText());
