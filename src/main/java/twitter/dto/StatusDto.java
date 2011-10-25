@@ -15,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -47,15 +48,16 @@ public class StatusDto {
 	private long inReplyToUserId;
 
 	@JoinColumn(name = "placeId")
-	@ManyToOne(targetEntity = PlaceDto.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(targetEntity = PlaceDto.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private PlaceDto place;
 
 	@JoinColumn(name = "userId")
-	@ManyToOne(targetEntity = UserDto.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(targetEntity = UserDto.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private UserDto user;
 	
 	private long retweetCount;
 	private String source;
+	@Lob
 	private String text;
 	private boolean isFavorited;
 	private boolean isRetweet;
@@ -74,7 +76,7 @@ public class StatusDto {
 	@ElementCollection
 	private List<Long> userMentionIds;
 	
-	@ManyToMany(cascade = CascadeType.ALL)
+	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	Set<MentionEntityDto> mentionedEntity;
 
 	/**
@@ -123,7 +125,9 @@ public class StatusDto {
 		if (status.getURLEntities() != null) {
 			this.urlEntities = new ArrayList<String>();
 			for (URLEntity urlEntity : status.getURLEntities()) {
-				this.urlEntities.add(urlEntity.getURL().toString());
+				if (urlEntity.getURL() != null) {
+					this.urlEntities.add(urlEntity.getURL().toString());
+				}
 			}
 		}
 		
@@ -325,3 +329,4 @@ public class StatusDto {
 		this.mentionedEntity = mentionedEntity;
 	}	
 }
+
