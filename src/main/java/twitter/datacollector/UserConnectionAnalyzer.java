@@ -46,7 +46,10 @@ public class UserConnectionAnalyzer {
 
 	public void collectData(String screenName, int connectionDepth, int type) {
 
-		if (connectionDepth <= 0) {
+		if (connectionDepth < 0) {
+			return;
+		} else if (connectionDepth == 0) {
+			collectAllFriendsFollowers(screenName);
 			return;
 		}
 
@@ -80,14 +83,17 @@ public class UserConnectionAnalyzer {
 				boolean successful = false;
 				while (!successful) {
 					try {
-						followersIds = twitter.getFollowersIDs(screenName, cursor);
+						followersIds = twitter.getFollowersIDs(screenName,
+								cursor);
 						friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+						Thread.sleep(22000);
 						successful = true;
 					} catch (TwitterException e) {
 						successful = false;
 						e.printStackTrace();
 						if (!e.isCausedByNetworkIssue()) {
-							//User might be protected; There is nothing we can do about it
+							// User might be protected; There is nothing we can
+							// do about it
 							break;
 						}
 						try {
@@ -95,10 +101,18 @@ public class UserConnectionAnalyzer {
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
-				
+
 				if (!successful) {
+					try {
+						Thread.sleep(12000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 					break;
 				}
 
@@ -143,11 +157,17 @@ public class UserConnectionAnalyzer {
 						try {
 							users = twitter.lookupUsers(idsSubArray);
 							successful = true;
+							try {
+								Thread.sleep(11000);
+							} catch (InterruptedException e1) {
+								logger.info(e1.getMessage());
+							}
 						} catch (TwitterException e) {
 							successful = false;
 							e.printStackTrace();
 							if (!e.isCausedByNetworkIssue()) {
-								//Exception might be because of non-network issues like invalid user account
+								// Exception might be because of non-network
+								// issues like invalid user account
 								break;
 							}
 							try {
@@ -158,14 +178,15 @@ public class UserConnectionAnalyzer {
 						}
 					}
 					if (!successful) {
+						try {
+							Thread.sleep(12000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
 						continue;
 					}
+
 					
-					try {
-						Thread.sleep(11000);
-					} catch (InterruptedException e1) {
-						logger.info(e1.getMessage());
-					}
 					for (User u : users) {
 						if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
 								|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
@@ -221,6 +242,92 @@ public class UserConnectionAnalyzer {
 		session.clear();
 	}
 
+	private void collectAllFriendsFollowers(String screenName) {
+		logger.info("Collecting followers for " + screenName);
+
+		long cursor = -1;
+		long cursor1 = -1;
+
+		Criteria criteria = session.createCriteria(UserDto.class);
+		criteria.add(Restrictions.eq("screenName", screenName));
+		UserDto currentUser = (UserDto) criteria.uniqueResult();
+		currentUser.setVisited(true);
+
+		if (currentUser.getFollowersIds() == null) {
+			currentUser.setFollowersIds(new HashSet<FollowerIdDto>());
+		}
+		if (currentUser.getFriendsIds() == null) {
+			currentUser.setFriendsIds(new HashSet<FriendIdDto>());
+		}
+
+		IDs followersIds = null;
+		IDs friendsIds = null;
+		boolean successful = false;
+		while (!successful) {
+			try {
+				followersIds = twitter.getFollowersIDs(screenName, cursor);
+				friendsIds = twitter.getFriendsIDs(screenName, cursor1);
+				try {
+					Thread.sleep(22000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				successful = true;
+			} catch (TwitterException e) {
+				successful = false;
+				e.printStackTrace();
+				if (!e.isCausedByNetworkIssue()) {
+					// User might be protected; There is nothing we can do about
+					// it
+					break;
+				}
+				try {
+					Thread.sleep(12000);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+
+		if (!successful) {
+			try {
+				Thread.sleep(12000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			return;
+		}
+
+		Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
+		Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
+		for (long id : followersIds.getIDs()) {
+			followersSet.add(new FollowerIdDto(id, currentUser.getId()));
+		}
+		for (long id : friendsIds.getIDs()) {
+			friendsSet.add(new FriendIdDto(id, currentUser.getId()));
+		}
+		currentUser.getFollowersIds().addAll(followersSet);
+		currentUser.getFriendsIds().addAll(friendsSet);
+
+		UserDto existingUser = (UserDto) session.get(UserDto.class,
+				currentUser.getId());
+		if (existingUser == null) {
+			session.saveOrUpdate(currentUser);
+		} else {
+			session.merge(currentUser);
+		}
+
+		if (countUsers >= BATCH_SIZE) {
+			countUsers = 0;
+			session.flush();
+			session.clear();
+			transaction.commit();
+			session = HibernateUtil.getSessionFactory().getCurrentSession();
+			transaction = session.beginTransaction();
+		}
+	}
+
 	public void collectConnectedUsers(String screenName, long cursor,
 			int connectionDepth, int type) {
 		IDs usersIds = null;
@@ -243,11 +350,17 @@ public class UserConnectionAnalyzer {
 					try {
 						usersIds = twitter.getFollowersIDs(screenName, cursor);
 						successful = true;
+						try {
+							Thread.sleep(11000);
+						} catch (InterruptedException e1) {
+							logger.info(e1.getMessage());
+						}
 					} catch (TwitterException e) {
 						successful = false;
 						e.printStackTrace();
 						if (!e.isCausedByNetworkIssue()) {
-							//User might be protected; There is nothing we can do about it
+							// User might be protected; There is nothing we can
+							// do about it
 							break;
 						}
 						try {
@@ -258,6 +371,11 @@ public class UserConnectionAnalyzer {
 					}
 				}
 				if (!successful) {
+					try {
+						Thread.sleep(12000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 					logger.error("Skipping user " + currentUser.getScreenName());
 					break;
 				}
@@ -268,23 +386,21 @@ public class UserConnectionAnalyzer {
 							.add(new FollowerIdDto(id, currentUser.getId()));
 				}
 				currentUser.getFollowersIds().addAll(followersSet);
-				try {
-					Thread.sleep(11000);
-				} catch (InterruptedException e1) {
-					logger.info(e1.getMessage());
-				}
+				
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
 				boolean successful = false;
 				while (!successful) {
 					try {
 						usersIds = twitter.getFriendsIDs(screenName, cursor);
+						Thread.sleep(11000);
 						successful = true;
 					} catch (TwitterException e) {
 						successful = false;
 						e.printStackTrace();
-						
+
 						if (!e.isCausedByNetworkIssue()) {
-							//User might be protected; There is nothing we can do about it
+							// User might be protected; There is nothing we can
+							// do about it
 							break;
 						}
 						try {
@@ -292,24 +408,28 @@ public class UserConnectionAnalyzer {
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 
 				if (!successful) {
+					try {
+						Thread.sleep(12000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 					logger.error("Skipping user " + currentUser.getScreenName());
 					break;
 				}
-				
+
 				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
 				for (long id : usersIds.getIDs()) {
 					friendsSet.add(new FriendIdDto(id, currentUser.getId()));
 				}
 				currentUser.getFriendsIds().addAll(friendsSet);
-				try {
-					Thread.sleep(11000);
-				} catch (InterruptedException e1) {
-					logger.info(e1.getMessage());
-				}
+
 			} else {
 				logger.error("UserConnectionAnalyzer: Unexpected type");
 				return;
@@ -329,12 +449,18 @@ public class UserConnectionAnalyzer {
 				while (!successful) {
 					try {
 						users = twitter.lookupUsers(idsSubArray);
+						try {
+							Thread.sleep(11000);
+						} catch (InterruptedException e1) {
+							logger.info(e1.getMessage());
+						}
 						successful = true;
 					} catch (TwitterException e) {
 						successful = false;
 						e.printStackTrace();
 						if (!e.isCausedByNetworkIssue()) {
-							//Exception might be because of non-network issues like invalid user account
+							// Exception might be because of non-network issues
+							// like invalid user account
 							break;
 						}
 						try {
@@ -345,14 +471,15 @@ public class UserConnectionAnalyzer {
 					}
 				}
 				if (!successful) {
+					try {
+						Thread.sleep(12000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 					continue;
 				}
 
-				try {
-					Thread.sleep(11000);
-				} catch (InterruptedException e1) {
-					logger.info(e1.getMessage());
-				}
+				
 				for (User u : users) {
 					if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
 							|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
@@ -405,11 +532,16 @@ public class UserConnectionAnalyzer {
 		twitter = TwitterFactory.getSingleton();
 		countUsers = 0;
 
-		String screenName = "EPFLNews";
+		String screenName = "_aakash";
 		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
 
 		try {
 			UserDto u = new UserDto(twitter.showUser(screenName));
+			try {
+				Thread.sleep(11000);
+			} catch (InterruptedException e1) {
+				logger.info(e1.getMessage());
+			}
 			u.setConnectionDepth(2);
 			u.setVisited(true);
 			session.saveOrUpdate(u);
