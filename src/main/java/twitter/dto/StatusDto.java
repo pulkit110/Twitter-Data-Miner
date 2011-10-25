@@ -48,11 +48,11 @@ public class StatusDto {
 	private long inReplyToUserId;
 
 	@JoinColumn(name = "placeId")
-	@ManyToOne(targetEntity = PlaceDto.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToOne(targetEntity = PlaceDto.class)//, fetch=FetchType.LAZY, cascade = {CascadeType.ALL})
 	private PlaceDto place;
 
 	@JoinColumn(name = "userId")
-	@ManyToOne(targetEntity = UserDto.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToOne(targetEntity = UserDto.class)//, fetch=FetchType.LAZY, cascade = {CascadeType.ALL})
 	private UserDto user;
 	
 	private long retweetCount;
@@ -76,7 +76,7 @@ public class StatusDto {
 	@ElementCollection
 	private List<Long> userMentionIds;
 	
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToMany(cascade = {CascadeType.ALL})
 	Set<MentionEntityDto> mentionedEntity;
 
 	/**

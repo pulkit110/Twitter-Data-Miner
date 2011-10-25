@@ -52,7 +52,7 @@ public class StatusStreamListener implements StatusListener {
 	 * @see twitter4j.StatusListener#onStatus(twitter4j.Status)
 	 */
 	public void onStatus(Status status) {
-		countTweets++;
+//		countTweets++;
 
 		boolean existingStatusFlag = false;
 		
@@ -60,69 +60,73 @@ public class StatusStreamListener implements StatusListener {
 				status.getId());
 
 		StatusDto statusDto = new StatusDto(status);
+		statusDto.setType(type);
 
 		if (existingStatus != null) {
 			existingStatusFlag = true;
 			statusDto.setType(existingStatus.getType() | this.type);
-//			statusDto.setPlace(existingStatus.getPlace());
-//			statusDto.setUser(existingStatus.getUser());
-		} 
-//		else {
-//			statusDto.setType(type);
-//			if (status.getPlace() != null) {
-//				PlaceDto place = (PlaceDto) session.get(PlaceDto.class, status
-//						.getPlace().getId());
-//				if (place == null) {
-//					place = new PlaceDto(status.getPlace());
-////					try {
-////						session.saveOrUpdate(place);
-////					} catch (NonUniqueObjectException e) {
-////						session.merge(place);
-////					}
-//					statusDto.setPlace(place);
-//				} else {
-//					statusDto.setPlace(place);
-//				}
-//			}
-//
-//			if (status.getUser() != null) {
-//				UserDto user = (UserDto) session.get(UserDto.class, status
-//						.getUser().getId());
-//				if (user == null) {
-//					user = new UserDto(status.getUser());
-////					try {
-////						session.saveOrUpdate(user);
-////					} catch (NonUniqueObjectException e) {
-////						session.merge(user);
-////					}
-//					statusDto.setUser(user);
-//				} else {
-//					statusDto.setUser(user);
-//				}
-//			}
 //		}
+			statusDto.setPlace(existingStatus.getPlace());
+			statusDto.setUser(existingStatus.getUser());
+		} else {
+			statusDto.setType(type);
+			if (status.getPlace() != null) {
+				PlaceDto existingPlace = (PlaceDto) session.get(PlaceDto.class, status
+						.getPlace().getId());
+				PlaceDto newPlace;
+				if (existingPlace == null) {
+					newPlace = new PlaceDto(status.getPlace());
+					try {
+						session.saveOrUpdate(newPlace);
+					} catch (NonUniqueObjectException e) {
+						session.merge(newPlace);
+					}
+					statusDto.setPlace(newPlace);
+				} else {
+					statusDto.setPlace(existingPlace);
+				}
+			}
 
-		if (existingStatusFlag) {
+			if (status.getUser() != null) {
+				UserDto existingUser = (UserDto) session.get(UserDto.class, status
+						.getUser().getId());
+				UserDto newUser;
+				if (existingUser == null) {
+					newUser = new UserDto(status.getUser());
+					try {
+						session.saveOrUpdate(newUser);
+					} catch (NonUniqueObjectException e) {
+						session.merge(newUser);
+					}
+					statusDto.setUser(newUser);
+				} else {
+					statusDto.setUser(existingUser);
+				}
+			}
+		}
+
+		if (!existingStatusFlag) {
 			try {
-				session.merge(statusDto);
+				session.saveOrUpdate(statusDto);
+//				session.merge(statusDto);
 			} catch (NonUniqueObjectException e) {
 				session.merge(statusDto);
-			} catch (ConstraintViolationException e1) {
-				session.merge(statusDto);
+//			} catch (ConstraintViolationException e1) {
+//				session.merge(statusDto);
 			}
 		} else {
 			session.merge(statusDto);
 		}
 
 		// Save 1 round of tweets to the database
-		if (countTweets >= BATCH_SIZE) {
-			countTweets = 0;
+//		if (countTweets >= BATCH_SIZE) {
+//			countTweets = 0;
 			session.flush();
 			session.clear();
 			transaction.commit();
 			session = HibernateUtil.getSessionFactory().getCurrentSession();
 			transaction = session.beginTransaction();
-		}
+//		}
 	}
 
 	/*
@@ -137,7 +141,8 @@ public class StatusStreamListener implements StatusListener {
 	 * @see twitter4j.StreamListener#onException(java.lang.Exception)
 	 */
 	public void onException(Exception ex) {
-		ex.printStackTrace();
+		//TODO Exceptions are catched here. 
+//		ex.printStackTrace();
 	}
 
 	public int getType() {
