@@ -97,7 +97,7 @@ public class UserConnectionAnalyzer {
 							break;
 						}
 						try {
-							Thread.sleep(12000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
@@ -108,11 +108,6 @@ public class UserConnectionAnalyzer {
 				}
 
 				if (!successful) {
-					try {
-						Thread.sleep(12000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
 					break;
 				}
 
@@ -128,11 +123,6 @@ public class UserConnectionAnalyzer {
 				currentUser.getFollowersIds().addAll(followersSet);
 				currentUser.getFriendsIds().addAll(friendsSet);
 
-				try {
-					Thread.sleep(11000);
-				} catch (InterruptedException e1) {
-					logger.info(e1.getMessage());
-				}
 				long[] followerIds = followersIds.getIDs();
 				long[] friendIds = friendsIds.getIDs();
 				long[] ids = new long[followerIds.length + friendIds.length];
@@ -171,18 +161,13 @@ public class UserConnectionAnalyzer {
 								break;
 							}
 							try {
-								Thread.sleep(12000);
+								Thread.sleep(5000);
 							} catch (InterruptedException e1) {
 								e1.printStackTrace();
 							}
 						}
 					}
 					if (!successful) {
-						try {
-							Thread.sleep(12000);
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
-						}
 						continue;
 					}
 
@@ -283,7 +268,7 @@ public class UserConnectionAnalyzer {
 					break;
 				}
 				try {
-					Thread.sleep(12000);
+					Thread.sleep(5000);
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
@@ -291,11 +276,6 @@ public class UserConnectionAnalyzer {
 		}
 
 		if (!successful) {
-			try {
-				Thread.sleep(12000);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
 			return;
 		}
 
@@ -364,18 +344,13 @@ public class UserConnectionAnalyzer {
 							break;
 						}
 						try {
-							Thread.sleep(12000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
 					}
 				}
 				if (!successful) {
-					try {
-						Thread.sleep(12000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
 					logger.error("Skipping user " + currentUser.getScreenName());
 					break;
 				}
@@ -404,7 +379,7 @@ public class UserConnectionAnalyzer {
 							break;
 						}
 						try {
-							Thread.sleep(12000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
@@ -415,11 +390,6 @@ public class UserConnectionAnalyzer {
 				}
 
 				if (!successful) {
-					try {
-						Thread.sleep(12000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
 					logger.error("Skipping user " + currentUser.getScreenName());
 					break;
 				}
@@ -464,18 +434,13 @@ public class UserConnectionAnalyzer {
 							break;
 						}
 						try {
-							Thread.sleep(12000);
+							Thread.sleep(5000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();
 						}
 					}
 				}
 				if (!successful) {
-					try {
-						Thread.sleep(12000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
 					continue;
 				}
 

@@ -46,10 +46,10 @@ public class UserDto {
 	int connectionDepth;
 	boolean visited;
 
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToMany(cascade = CascadeType.ALL)
 	Set<FollowerIdDto> followersIds;
 
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToMany(cascade = CascadeType.ALL)
 	Set<FriendIdDto> friendsIds;
 
 	public UserDto() {
