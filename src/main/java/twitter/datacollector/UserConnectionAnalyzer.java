@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
@@ -38,8 +39,9 @@ public class UserConnectionAnalyzer {
 	public static int THRESHOLD_FOLLOWERS_COUNT = 5000;
 	public static int THRESHOLD_FOLLOWING_COUNT = 1000;
 
-	static org.slf4j.Logger logger = LoggerFactory
-			.getLogger(UserConnectionAnalyzer.class);
+	private static UserConnectionAnalyzer uca;
+
+	static org.slf4j.Logger logger = LoggerFactory.getLogger(UserConnectionAnalyzer.class);
 
 	public UserConnectionAnalyzer() {
 	};
@@ -83,8 +85,7 @@ public class UserConnectionAnalyzer {
 				boolean successful = false;
 				while (!successful) {
 					try {
-						followersIds = twitter.getFollowersIDs(screenName,
-								cursor);
+						followersIds = twitter.getFollowersIDs(screenName, cursor);
 						friendsIds = twitter.getFriendsIDs(screenName, cursor1);
 						Thread.sleep(22000);
 						successful = true;
@@ -114,8 +115,7 @@ public class UserConnectionAnalyzer {
 				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
 				Set<FriendIdDto> friendsSet = new HashSet<FriendIdDto>();
 				for (long id : followersIds.getIDs()) {
-					followersSet
-							.add(new FollowerIdDto(id, currentUser.getId()));
+					followersSet.add(new FollowerIdDto(id, currentUser.getId()));
 				}
 				for (long id : friendsIds.getIDs()) {
 					friendsSet.add(new FriendIdDto(id, currentUser.getId()));
@@ -135,12 +135,9 @@ public class UserConnectionAnalyzer {
 				// break ids array into arrays of size of user request
 				// limit(100)
 				for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
-					int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
-							- i * USER_REQUEST_LIMIT
-							: USER_REQUEST_LIMIT;
+					int length = i == ids.length / USER_REQUEST_LIMIT ? ids.length - i * USER_REQUEST_LIMIT : USER_REQUEST_LIMIT;
 					long[] idsSubArray = new long[length];
-					System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray,
-							0, length);
+					System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray, 0, length);
 					ResponseList<User> users = null;
 					successful = false;
 					while (!successful) {
@@ -171,10 +168,8 @@ public class UserConnectionAnalyzer {
 						continue;
 					}
 
-					
 					for (User u : users) {
-						if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
-								|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
+						if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT || u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
 							continue;
 						}
 						UserDto user = new UserDto(u);
@@ -184,14 +179,12 @@ public class UserConnectionAnalyzer {
 
 						boolean visitedIncorrectly = false;
 						boolean newVisit = false;
-						UserDto existingUser = (UserDto) session.get(
-								UserDto.class, user.getId());
+						UserDto existingUser = (UserDto) session.get(UserDto.class, user.getId());
 						if (existingUser == null) {
 							session.saveOrUpdate(user);
 							newVisit = true;
 						} else {
-							if (existingUser.getConnectionDepth() < user
-									.getConnectionDepth()) {
+							if (existingUser.getConnectionDepth() < user.getConnectionDepth()) {
 								visitedIncorrectly = true;
 								session.merge(user);
 							}
@@ -202,8 +195,7 @@ public class UserConnectionAnalyzer {
 							session.flush();
 							session.clear();
 							transaction.commit();
-							session = HibernateUtil.getSessionFactory()
-									.getCurrentSession();
+							session = HibernateUtil.getSessionFactory().getCurrentSession();
 							transaction = session.beginTransaction();
 						}
 
@@ -290,8 +282,7 @@ public class UserConnectionAnalyzer {
 		currentUser.getFollowersIds().addAll(followersSet);
 		currentUser.getFriendsIds().addAll(friendsSet);
 
-		UserDto existingUser = (UserDto) session.get(UserDto.class,
-				currentUser.getId());
+		UserDto existingUser = (UserDto) session.get(UserDto.class, currentUser.getId());
 		if (existingUser == null) {
 			session.saveOrUpdate(currentUser);
 		} else {
@@ -308,8 +299,7 @@ public class UserConnectionAnalyzer {
 		}
 	}
 
-	public void collectConnectedUsers(String screenName, long cursor,
-			int connectionDepth, int type) {
+	public void collectConnectedUsers(String screenName, long cursor, int connectionDepth, int type) {
 		IDs usersIds = null;
 		Criteria criteria = session.createCriteria(UserDto.class);
 		criteria.add(Restrictions.eq("screenName", screenName));
@@ -357,11 +347,10 @@ public class UserConnectionAnalyzer {
 				Set<FollowerIdDto> followersSet = new HashSet<FollowerIdDto>();
 
 				for (long id : usersIds.getIDs()) {
-					followersSet
-							.add(new FollowerIdDto(id, currentUser.getId()));
+					followersSet.add(new FollowerIdDto(id, currentUser.getId()));
 				}
 				currentUser.getFollowersIds().addAll(followersSet);
-				
+
 			} else if (type == UserConnectionAnalyzer.TRACK_FOLLOWING) {
 				boolean successful = false;
 				while (!successful) {
@@ -408,12 +397,9 @@ public class UserConnectionAnalyzer {
 			long[] ids = usersIds.getIDs();
 
 			for (int i = 0; i <= ids.length / USER_REQUEST_LIMIT; ++i) {
-				int length = (i == ids.length / USER_REQUEST_LIMIT) ? ids.length
-						- i * USER_REQUEST_LIMIT
-						: USER_REQUEST_LIMIT;
+				int length = i == ids.length / USER_REQUEST_LIMIT ? ids.length - i * USER_REQUEST_LIMIT : USER_REQUEST_LIMIT;
 				long[] idsSubArray = new long[length];
-				System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray, 0,
-						length);
+				System.arraycopy(ids, i * USER_REQUEST_LIMIT, idsSubArray, 0, length);
 				ResponseList<User> users = null;
 				boolean successful = false;
 				while (!successful) {
@@ -444,23 +430,19 @@ public class UserConnectionAnalyzer {
 					continue;
 				}
 
-				
 				for (User u : users) {
-					if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT
-							|| u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
+					if (u.getFollowersCount() > THRESHOLD_FOLLOWERS_COUNT || u.getFriendsCount() > THRESHOLD_FOLLOWING_COUNT) {
 						continue;
 					}
 					UserDto user = new UserDto(u);
 					user.setConnectionDepth(connectionDepth - 1);
 					countUsers++;
 					newUsers.add(user);
-					UserDto existingUser = (UserDto) session.get(UserDto.class,
-							user.getId());
+					UserDto existingUser = (UserDto) session.get(UserDto.class, user.getId());
 					if (existingUser == null) {
 						session.saveOrUpdate(user);
 					} else {
-						if (existingUser.getConnectionDepth() < user
-								.getConnectionDepth()) {
+						if (existingUser.getConnectionDepth() < user.getConnectionDepth()) {
 							session.merge(user);
 						}
 					}
@@ -469,8 +451,7 @@ public class UserConnectionAnalyzer {
 						session.flush();
 						session.clear();
 						transaction.commit();
-						session = HibernateUtil.getSessionFactory()
-								.getCurrentSession();
+						session = HibernateUtil.getSessionFactory().getCurrentSession();
 						transaction = session.beginTransaction();
 					}
 
@@ -491,6 +472,19 @@ public class UserConnectionAnalyzer {
 
 	}
 
+	public static void continueCollection() {
+
+		Query q = session.createQuery("from UserDto");
+		@SuppressWarnings("unchecked")
+		List<UserDto> users = q.list();
+
+		for (UserDto u : users) {
+			if (!u.isVisited()) {
+				uca.collectData(u.getScreenName(), u.getConnectionDepth(), UserConnectionAnalyzer.TRACK_BOTH);
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		session = HibernateUtil.getSessionFactory().getCurrentSession();
 		transaction = session.beginTransaction();
@@ -498,7 +492,7 @@ public class UserConnectionAnalyzer {
 		countUsers = 0;
 
 		String screenName = "_aakash";
-		UserConnectionAnalyzer uca = new UserConnectionAnalyzer();
+		uca = new UserConnectionAnalyzer();
 
 		try {
 			UserDto u = new UserDto(twitter.showUser(screenName));
@@ -516,7 +510,12 @@ public class UserConnectionAnalyzer {
 			e.printStackTrace();
 		}
 
-		uca.collectData(screenName, 2, UserConnectionAnalyzer.TRACK_BOTH);
+		// Collect users from screenName
+		// uca.collectData(screenName, 2, UserConnectionAnalyzer.TRACK_BOTH);
+
+		// Continue collection
+		continueCollection();
+
 		transaction.commit();
 		// session.close();
 	}
