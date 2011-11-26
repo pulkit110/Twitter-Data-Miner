@@ -115,12 +115,20 @@
 			<version>1.3.2</version>
 		</dependency>
 
-		<!-- Lingpipe for finding similarity between tweets-->
+		<!-- Lingpipe for finding similarity between tweets -->
 		<dependency>
 			<groupId>com.aliasi</groupId>
 			<artifactId>lingpipe</artifactId>
 			<version>4.0.1</version>
 		</dependency>
+
+		<!-- Lucene to create document index -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>3.4.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
