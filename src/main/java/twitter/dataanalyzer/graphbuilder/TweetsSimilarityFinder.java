@@ -60,6 +60,10 @@ public class TweetsSimilarityFinder {
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
 
 		TermDocumentUtils.printTermFrequenciesToFile(indexReader);
+		
+		double[][] termDocMatrix = TermDocumentUtils
+				.buildTermDocMatrix(indexReader);
+		TermDocumentUtils.docsCosineSimilarity(termDocMatrix);
 
 	}
 
