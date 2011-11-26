@@ -3,13 +3,20 @@
  */
 package twitter.dataanalyzer.graphbuilder;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermFreqVector;
 import org.hibernate.Criteria;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
@@ -49,12 +56,48 @@ public class TweetsSimilarityFinder {
 				tweetsSimilarityFinder.getDocumentDir());
 
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
+		List<TermFreqVector> TfMatrix = new ArrayList<TermFreqVector>();
 		
 		int numDocs = indexReader.numDocs();
+		List<String> docsList = new ArrayList<String>();
+		
+		FileWriter fw2 = new FileWriter("tmp/docs.txt");
+		BufferedWriter out2 = new BufferedWriter(fw2);
+		
 		for (int i = 0; i < numDocs; ++i) {
-			Document d = indexReader.document(i);			
+			Document d = indexReader.document(i);
+			out2.write(d.getField("path").stringValue() + "\n");
+			TermFreqVector termFreqVector = indexReader.getTermFreqVector(i, "contents");
+			List<Fieldable> fileds = d.getFields();
+			TfMatrix.add(termFreqVector);
 		}
+		out2.close();
+		
+		TermEnum terms = indexReader.terms();
+		List<String> termsList = new ArrayList<String>();
+		
+		FileWriter fw = new FileWriter("tmp/termdoc.txt");
+		BufferedWriter out = new BufferedWriter(fw);
+		
+		FileWriter fw1 = new FileWriter("tmp/terms.txt");
+		BufferedWriter out1 = new BufferedWriter(fw1);
 
+
+		
+		int termIndex = 0;
+		while (terms.next()) {
+			termsList.add(terms.term().toString());
+			out1.write(terms.term().text() + "\n");
+			TermDocs termDocs = indexReader.termDocs(terms.term());
+			while (termDocs.next()) {
+				out.write(termIndex + " " + termDocs.doc() + " " + termDocs.freq() + "\n");
+			}
+			++ termIndex;
+		}
+		out.close();
+		out1.close();
+
+		
 	}
 
 	private List<File> generateTweetFiles(int nUsers) {

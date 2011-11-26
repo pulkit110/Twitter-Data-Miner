@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
+
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriter.MaxFieldLength;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -68,7 +71,7 @@ public class LuceneIndexer {
 
 		IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_34,
 				analyzer);
-
+		config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 		writer = new IndexWriter(dir, config);
 	}
 
@@ -98,12 +101,12 @@ public class LuceneIndexer {
 				// add contents of file
 				// ===================================================
 				fr = new FileReader(f);
-				doc.add(new Field("contents", fr));
+				doc.add(new Field("contents", fr,Field.TermVector.YES));
 
 				// ===================================================
 				// adding second field which contains the path of the file
 				// ===================================================
-				doc.add(new Field("path", fileName, Field.Store.YES,
+				doc.add(new Field("path", f.getName(), Field.Store.YES,
 						Field.Index.NOT_ANALYZED));
 
 				writer.addDocument(doc);
