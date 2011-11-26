@@ -7,23 +7,24 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.TermFreqVector;
 import org.hibernate.Criteria;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 
 import twitter.dataanalyzer.utils.LuceneIndexer;
+import twitter.dataanalyzer.utils.TermDocumentUtils;
 import twitter.dataanalyzer.utils.UserTweetsCombiner;
 import twitter.dto.UserDto;
+
+import com.aliasi.matrix.SvdMatrix;
+
 import dbutils.HibernateUtil;
 
 /**
@@ -39,10 +40,11 @@ public class TweetsSimilarityFinder {
 
 	/**
 	 * @param args
-	 * @throws IOException 
-	 * @throws CorruptIndexException 
+	 * @throws IOException
+	 * @throws CorruptIndexException
 	 */
-	public static void main(String[] args) throws CorruptIndexException, IOException {
+	public static void main(String[] args) throws CorruptIndexException,
+			IOException {
 
 		int nUsers = 10;
 
@@ -56,58 +58,43 @@ public class TweetsSimilarityFinder {
 				tweetsSimilarityFinder.getDocumentDir());
 
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
-		List<TermFreqVector> TfMatrix = new ArrayList<TermFreqVector>();
-		
-		int numDocs = indexReader.numDocs();
-		List<String> docsList = new ArrayList<String>();
-		
-		FileWriter fw2 = new FileWriter("tmp/docs.txt");
-		BufferedWriter out2 = new BufferedWriter(fw2);
-		
-		for (int i = 0; i < numDocs; ++i) {
-			Document d = indexReader.document(i);
-			out2.write(d.getField("path").stringValue() + "\n");
-			TermFreqVector termFreqVector = indexReader.getTermFreqVector(i, "contents");
-			List<Fieldable> fileds = d.getFields();
-			TfMatrix.add(termFreqVector);
-		}
-		out2.close();
-		
-		TermEnum terms = indexReader.terms();
-		List<String> termsList = new ArrayList<String>();
-		
-		FileWriter fw = new FileWriter("tmp/termdoc.txt");
-		BufferedWriter out = new BufferedWriter(fw);
-		
-		FileWriter fw1 = new FileWriter("tmp/terms.txt");
-		BufferedWriter out1 = new BufferedWriter(fw1);
 
+		TermDocumentUtils.printTermFrequenciesToFile(indexReader);
 
-		
-		int termIndex = 0;
-		while (terms.next()) {
-			termsList.add(terms.term().toString());
-			out1.write(terms.term().text() + "\n");
-			TermDocs termDocs = indexReader.termDocs(terms.term());
-			while (termDocs.next()) {
-				out.write(termIndex + " " + termDocs.doc() + " " + termDocs.freq() + "\n");
-			}
-			++ termIndex;
-		}
-		out.close();
-		out1.close();
+	}
 
-		
+	private SvdMatrix createSvdMatrix(IndexReader indexReader)
+			throws IOException {
+		double[][] termDocMatrix = TermDocumentUtils
+				.buildTermDocMatrix(indexReader);
+
+		// Dimension of SVD
+		int maxFactors = 2;
+		double featureInit = 0.01;
+		double initialLearningRate = 0.005;
+		int annealingRate = 1000;
+		double regularization = 0.00;
+		double minImprovement = 0.0000;
+		int minEpochs = 10;
+		int maxEpochs = 50000;
+
+		SvdMatrix matrix = SvdMatrix.svd(termDocMatrix, maxFactors,
+				featureInit, initialLearningRate, annealingRate,
+				regularization, null, minImprovement, minEpochs, maxEpochs);
+		// The final argument is null, which turns off feedback from the SVD
+		// solver during the solution process.
+
+		return matrix;
 	}
 
 	private List<File> generateTweetFiles(int nUsers) {
 		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 		Transaction transaction = session.beginTransaction();
-		
+
 		Criteria c = session.createCriteria(UserDto.class);
 		c.setMaxResults(nUsers);
 		List<UserDto> users = c.list();
-		
+
 		session.close();
 
 		UserTweetsCombiner userTweetsCombiner = new UserTweetsCombiner(
