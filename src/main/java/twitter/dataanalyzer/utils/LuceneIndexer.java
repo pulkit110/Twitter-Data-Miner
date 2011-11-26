@@ -1,10 +1,8 @@
 package twitter.dataanalyzer.utils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +11,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
@@ -25,6 +24,7 @@ import org.apache.lucene.util.Version;
 public class LuceneIndexer {
 
 	private IndexWriter writer;
+	Directory indexDir;
 
 	public void addAll(List<String> fileOrDirectoryPaths) {
 
@@ -46,10 +46,11 @@ public class LuceneIndexer {
 	 *            the name of the folder in which the index should be created
 	 * @throws java.io.IOException
 	 */
-	LuceneIndexer(String indexDir) throws IOException {
+	public LuceneIndexer(String indexDir) throws IOException {
 		// the boolean true parameter means to create a new index everytime,
 		// potentially overwriting any existing files there.
 		FSDirectory dir = FSDirectory.open(new File(indexDir));
+		this.indexDir = dir;
 
 		StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_34);
 
@@ -145,5 +146,33 @@ public class LuceneIndexer {
 	public void closeIndex() throws IOException {
 		writer.optimize();
 		writer.close();
+	}
+
+
+	public IndexWriter getWriter() {
+		return writer;
+	}
+
+
+	public void setWriter(IndexWriter writer) {
+		this.writer = writer;
+	}
+
+
+	public Directory getIndexDir() {
+		return indexDir;
+	}
+
+
+	public void setIndexDir(Directory indexDir) {
+		this.indexDir = indexDir;
+	}
+
+
+	public void addAll(String documentDir) {
+		List <String> fileOrDocumentPaths = new ArrayList<String>();
+		fileOrDocumentPaths.add(documentDir);
+		addAll(fileOrDocumentPaths);
+		
 	}
 }

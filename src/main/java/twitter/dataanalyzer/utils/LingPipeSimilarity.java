@@ -1,7 +1,7 @@
 /**
  * 
  */
-package twitter.dataanalyzer.graphbuilder;
+package twitter.dataanalyzer.utils;
 
 import com.aliasi.spell.TfIdfDistance;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
@@ -12,7 +12,7 @@ import com.aliasi.util.ObjectToCounterMap;
  * @author pulkit and sapan
  * 
  */
-public class TweetSimilarityAnalyzer {
+public class LingPipeSimilarity {
 
 	/**
 	 * @param strings
