@@ -15,6 +15,8 @@ import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 
+import com.mysql.jdbc.Extension;
+
 import dbutils.HibernateUtil;
 
 import twitter.dto.StatusDto;
@@ -26,6 +28,7 @@ import twitter.dto.UserDto;
  */
 public class UserTweetsCombiner {
 
+	private static final String FILE_EXTENSION = ".txt";
 	private String documentDir;
 	private File documentDirectory;
 	private List<UserDto> users;
@@ -36,24 +39,26 @@ public class UserTweetsCombiner {
 
 	public List<File> generateTweetFiles() throws IOException {
 		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+		Transaction transaction = session.beginTransaction();
 		
 		List<File> userTweetFiles = new ArrayList<File>();
 		
 		for (UserDto u : users) {
 			Criteria c = session.createCriteria(StatusDto.class);
+			c.add(Restrictions.eq("user", u));
 			List<StatusDto> statuses = c.list();
-			c.add(Restrictions.eq("screenname", u.getScreenName()));
 			
-			File f = new File(documentDir+File.separator+u.getScreenName());
+			File f = new File(documentDir+File.separator+u.getScreenName()+FILE_EXTENSION);
 			userTweetFiles.add(f);
 			FileWriter fw = new FileWriter(f);
 			BufferedWriter out = new BufferedWriter(fw);
 			for (StatusDto s : statuses) {
 				out.write(s.getText() + "\n");
 			}
+			out.close();
 
 		}
-		
+		session.close();
 		return userTweetFiles;
 	}
 	

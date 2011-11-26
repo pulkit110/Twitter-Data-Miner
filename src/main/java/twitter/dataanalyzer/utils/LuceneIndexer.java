@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -25,6 +26,7 @@ public class LuceneIndexer {
 
 	private IndexWriter writer;
 	Directory indexDir;
+	ArrayList<File> queue = new ArrayList<File>();
 
 	public void addAll(List<String> fileOrDirectoryPaths) {
 
@@ -35,6 +37,16 @@ public class LuceneIndexer {
 				System.out.println("Unable to at " + f + "to index");
 				e.printStackTrace();
 			}
+		}
+		
+		try {
+			writer.close();
+		} catch (CorruptIndexException e) {
+			System.out.println("Unable to close writer: Corrupt Index");
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.out.println("Unable to close writer: IO Exception");
+			e.printStackTrace();
 		}
 	}
 
@@ -114,7 +126,7 @@ public class LuceneIndexer {
 	}
 
 	private ArrayList<File> listFiles(File file) {
-		ArrayList<File> queue = new ArrayList<File>();
+//		ArrayList<File> queue = new ArrayList<File>();
 
 		if (!file.exists()) {
 			System.out.println(file + " does not exist.");

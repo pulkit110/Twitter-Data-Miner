@@ -7,9 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.hibernate.Criteria;
+import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 
 import twitter.dataanalyzer.utils.LuceneIndexer;
@@ -30,8 +32,10 @@ public class TweetsSimilarityFinder {
 
 	/**
 	 * @param args
+	 * @throws IOException 
+	 * @throws CorruptIndexException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws CorruptIndexException, IOException {
 
 		int nUsers = 10;
 
@@ -45,14 +49,23 @@ public class TweetsSimilarityFinder {
 				tweetsSimilarityFinder.getDocumentDir());
 
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
+		
+		int numDocs = indexReader.numDocs();
+		for (int i = 0; i < numDocs; ++i) {
+			Document d = indexReader.document(i);			
+		}
 
 	}
 
 	private List<File> generateTweetFiles(int nUsers) {
 		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+		Transaction transaction = session.beginTransaction();
+		
 		Criteria c = session.createCriteria(UserDto.class);
 		c.setMaxResults(nUsers);
 		List<UserDto> users = c.list();
+		
+		session.close();
 
 		UserTweetsCombiner userTweetsCombiner = new UserTweetsCombiner(
 				documentDir);
