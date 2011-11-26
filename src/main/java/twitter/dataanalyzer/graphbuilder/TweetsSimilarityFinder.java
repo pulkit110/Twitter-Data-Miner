@@ -63,32 +63,10 @@ public class TweetsSimilarityFinder {
 		
 		double[][] termDocMatrix = TermDocumentUtils
 				.buildTermDocMatrix(indexReader);
+		
 		TermDocumentUtils.docsCosineSimilarity(termDocMatrix);
+		TermDocumentUtils.docsLSASimilarity(termDocMatrix);
 
-	}
-
-	private SvdMatrix createSvdMatrix(IndexReader indexReader)
-			throws IOException {
-		double[][] termDocMatrix = TermDocumentUtils
-				.buildTermDocMatrix(indexReader);
-
-		// Dimension of SVD
-		int maxFactors = 2;
-		double featureInit = 0.01;
-		double initialLearningRate = 0.005;
-		int annealingRate = 1000;
-		double regularization = 0.00;
-		double minImprovement = 0.0000;
-		int minEpochs = 10;
-		int maxEpochs = 50000;
-
-		SvdMatrix matrix = SvdMatrix.svd(termDocMatrix, maxFactors,
-				featureInit, initialLearningRate, annealingRate,
-				regularization, null, minImprovement, minEpochs, maxEpochs);
-		// The final argument is null, which turns off feedback from the SVD
-		// solver during the solution process.
-
-		return matrix;
 	}
 
 	private List<File> generateTweetFiles(int nUsers) {
