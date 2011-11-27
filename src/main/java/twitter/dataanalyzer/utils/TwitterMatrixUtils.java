@@ -39,7 +39,12 @@ public class TwitterMatrixUtils {
 		BufferedWriter out2 = new BufferedWriter(fw2);
 		for (int i = 0; i < numDocs; ++i) {
 			Document d = indexReader.document(i);
-			out2.write(d.getField("path").stringValue() + "\n");
+			String uName = d.getField("path").stringValue();
+			if (uName.indexOf('.') != -1) {
+				uName = uName.substring(0, uName.indexOf('.'));
+			}
+			
+			out2.write(uName+ "\n");
 		}
 		out2.close();
 
