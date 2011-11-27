@@ -17,9 +17,10 @@ import org.apache.lucene.index.TermEnum;
 import org.hibernate.Criteria;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
+import org.hibernate.criterion.Restrictions;
 
 import twitter.dataanalyzer.utils.LuceneIndexer;
-import twitter.dataanalyzer.utils.TermDocumentUtils;
+import twitter.dataanalyzer.utils.TwitterMatrixUtils;
 import twitter.dataanalyzer.utils.UserTweetsCombiner;
 import twitter.dto.UserDto;
 
@@ -46,7 +47,7 @@ public class TweetsSimilarityFinder {
 	public static void main(String[] args) throws CorruptIndexException,
 			IOException {
 
-		int nUsers = 10;
+		int nUsers = 400;
 
 		TweetsSimilarityFinder tweetsSimilarityFinder = new TweetsSimilarityFinder();
 
@@ -59,13 +60,13 @@ public class TweetsSimilarityFinder {
 
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
 
-		TermDocumentUtils.printTermFrequenciesToFile(indexReader);
+		TwitterMatrixUtils.printTermFrequenciesToFile(indexReader);
 		
-		double[][] termDocMatrix = TermDocumentUtils
+		double[][] termDocMatrix = TwitterMatrixUtils
 				.buildTermDocMatrix(indexReader);
 		
-		TermDocumentUtils.docsCosineSimilarity(termDocMatrix);
-		TermDocumentUtils.docsLSASimilarity(termDocMatrix);
+		TwitterMatrixUtils.docsCosineSimilarity(termDocMatrix);
+		TwitterMatrixUtils.docsLSASimilarity(termDocMatrix);
 
 	}
 
@@ -74,6 +75,11 @@ public class TweetsSimilarityFinder {
 		Transaction transaction = session.beginTransaction();
 
 		Criteria c = session.createCriteria(UserDto.class);
+		c.add(Restrictions.eq("visited", true));
+		c.add(Restrictions.gt("connectionDepth", 0));
+//		c.add(Restrictions.gt("followersCount", 25));
+//		c.add(Restrictions.gt("friendsCount", 25));
+//		c.add(Restrictions.gt("statusesCount", 50));
 		c.setMaxResults(nUsers);
 		List<UserDto> users = c.list();
 

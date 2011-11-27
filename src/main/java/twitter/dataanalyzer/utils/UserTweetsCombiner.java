@@ -47,7 +47,9 @@ public class UserTweetsCombiner {
 			Criteria c = session.createCriteria(StatusDto.class);
 			c.add(Restrictions.eq("user", u));
 			List<StatusDto> statuses = c.list();
-			
+			if (statuses.isEmpty()) {
+				continue;
+			}
 			File f = new File(documentDir+File.separator+u.getScreenName()+FILE_EXTENSION);
 			userTweetFiles.add(f);
 			FileWriter fw = new FileWriter(f);
