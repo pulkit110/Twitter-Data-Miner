@@ -86,20 +86,22 @@ public class UserGraphBuilder {
 		double[][] userDescriptionSimilarity = findDescriptionSimliarity(users);
 		boolean[][] userDescriptionGraph = TwitterMatrixUtils.toGraph(userDescriptionSimilarity,
 				descriptionSimliaritythreshold);
-		boolean[][] placeSimilarityGraph = findPlaceSimilarity(users, locationSimilarityThreshold);
+//		boolean[][] placeSimilarityGraph = findPlaceSimilarity(users, locationSimilarityThreshold);
+//
+//		TwitterFileUtils.writeSparse(userMentionGraph, userMentionSparseGraphPath);
+//		TwitterFileUtils.writeSparse(userReplyGraph, userReplySparseGraphPath);
+//		TwitterFileUtils.writeSparse(userDescriptionGraph, userDescriptionSparseGraphPath);
+//		TwitterFileUtils.writeSparse(placeSimilarityGraph, userPlaceSimilaritySparseGraphPath);
+//
+//		TwitterFileUtils.write(userMentionGraph, userMentionGraphPath);
+//		TwitterFileUtils.write(userReplyGraph, userReplyGraphPath);
+//		TwitterFileUtils.write(userDescriptionGraph, userDescriptionGraphPath);
+//		TwitterFileUtils.write(placeSimilarityGraph, userPlaceSimilarityGraphPath);
+//
+//		TwitterFileUtils.write(userDescriptionSimilarity, userDescriptionSimilarityPath);
 
-		TwitterFileUtils.writeSparse(userMentionGraph, userMentionSparseGraphPath);
-		TwitterFileUtils.writeSparse(userReplyGraph, userReplySparseGraphPath);
-		TwitterFileUtils.writeSparse(userDescriptionGraph, userDescriptionSparseGraphPath);
-		TwitterFileUtils.writeSparse(placeSimilarityGraph, userPlaceSimilaritySparseGraphPath);
-
-		TwitterFileUtils.write(userMentionGraph, userMentionGraphPath);
-		TwitterFileUtils.write(userReplyGraph, userReplyGraphPath);
-		TwitterFileUtils.write(userDescriptionGraph, userDescriptionGraphPath);
-		TwitterFileUtils.write(placeSimilarityGraph, userPlaceSimilarityGraphPath);
-
-		TwitterFileUtils.write(userDescriptionSimilarity, userDescriptionSimilarityPath);
-
+		CommunityDetector spectralCommunityDetector = new SpectralCommunityDetector();
+		spectralCommunityDetector.cluster(userDescriptionGraph);
 	}
 
 	private static boolean[][] findPlaceSimilarity(List<UserDto> users, LocationLevel locationSimilarityThreshold)
