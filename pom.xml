@@ -41,6 +41,13 @@
 			</snapshots>
 		</repository>
 
+		<!-- repository for MBARI open source software projects -->
+		<repository>
+			<id>mbari-maven-repository</id>
+			<name>MBARI Maven Repository</name>
+			<url>http://mbari-maven-repository.googlecode.com/svn/repository/</url>
+		</repository>
+
 	</repositories>
 
 	<dependencies>
@@ -127,6 +134,12 @@
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
 			<version>3.4.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>jama</groupId>
+			<artifactId>jama</artifactId>
+			<version>1.0.2</version>
 		</dependency>
 
 	</dependencies>
