@@ -2,7 +2,6 @@ package twitter.dataanalyzer.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,8 +12,16 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.hibernate.Criteria;
+import org.hibernate.Transaction;
+import org.hibernate.classic.Session;
+import org.hibernate.criterion.Restrictions;
+
+import twitter.dto.UserDto;
 
 import com.aliasi.matrix.SvdMatrix;
+
+import dbutils.HibernateUtil;
 
 /**
  * 
@@ -25,15 +32,20 @@ public class TwitterMatrixUtils {
 
 	static final String DocsCosineSimilarityFilePath = "tmp/docsCosineSimilarity.txt";
 	private static final String DocsLSASimilarityFilePath = "tmp/docsLSASimilarity.txt";
-	static String docsListPath = "tmp/docs.txt";
+//	static String docsListPath = "tmp/docs.txt";
+	static String docsListPath = "tmp/community/userClusters.txt";
 	static String termDocMatrixPath = "tmp/termdoc.txt";
 	static String termsListPath = "tmp/terms.txt";
 
-	public static void printTermFrequenciesToFile(IndexReader indexReader)
+	public static List<UserDto> printTermFrequenciesToFile(IndexReader indexReader)
 			throws IOException {
 
 		int numDocs = indexReader.numDocs();
 
+		List<UserDto> users = new ArrayList<UserDto>();
+		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+		Transaction transaction = session.beginTransaction();
+		
 		// Write all document titles to file
 		FileWriter fw2 = new FileWriter(docsListPath);
 		BufferedWriter out2 = new BufferedWriter(fw2);
@@ -43,7 +55,9 @@ public class TwitterMatrixUtils {
 			if (uName.indexOf('.') != -1) {
 				uName = uName.substring(0, uName.indexOf('.'));
 			}
-			
+			Criteria c = session.createCriteria(UserDto.class);
+			c.add(Restrictions.eq("screenName", uName));
+			users.add((UserDto) c.uniqueResult());
 			out2.write(uName+ "\n");
 		}
 		out2.close();
@@ -71,7 +85,7 @@ public class TwitterMatrixUtils {
 		}
 		out.close();
 		out1.close();
-
+		return users;
 	}
 
 	public static double[][] buildTermDocMatrix(IndexReader indexReader)
@@ -287,5 +301,12 @@ public class TwitterMatrixUtils {
 			}
 		}
 		return graph;
+	}
+
+	public static void copy(double[] source, double[] destination) {
+		for (int i = 0; i < destination.length; ++i) {
+			destination[i] = source[i];
+		}
+		
 	}
 }

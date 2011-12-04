@@ -38,20 +38,24 @@ public class UserGraphBuilder {
 		STREET, CITY, STATE, COUNTRY, CONTINENT
 	}
 
-	private static String userDescriptionSimilarityPath = "tmp/userDescriptionSimliarity.txt";
+	private static String userDescriptionSimilarityPath = "tmp/community/userDescriptionSimliarity.txt";
 
-	private static String userMentionGraphPath = "tmp/userMentionGraph.txt";
-	private static String userReplyGraphPath = "tmp/userReplyGraph.txt";
-	private static String userDescriptionGraphPath = "tmp/userDescriptionSimliarityGraph.txt";
-	private static String userPlaceSimilarityGraphPath = "tmp/userPlaceSimilarityGraph.txt";
+	private static String userMentionGraphPath = "tmp/community/userMentionGraph.txt";
+	private static String userReplyGraphPath = "tmp/community/userReplyGraph.txt";
+	private static String userDescriptionGraphPath = "tmp/community/userDescriptionSimliarityGraph.txt";
+	private static String userPlaceSimilarityGraphPath = "tmp/community/userPlaceSimilarityGraph.txt";
 
-	private static String userMentionSparseGraphPath = "tmp/userMentionSparseGraph.txt";
-	private static String userReplySparseGraphPath = "tmp/userReplySparseGraph.txt";
-	private static String userDescriptionSparseGraphPath = "tmp/userDescriptionSimliaritySparseGraph.txt";
-	private static String userPlaceSimilaritySparseGraphPath = "tmp/userPlaceSimilaritySparseGraph.txt";
+	private static String userMentionSparseGraphPath = "tmp/community/userMentionSparseGraph.txt";
+	private static String userReplySparseGraphPath = "tmp/community/userReplySparseGraph.txt";
+	private static String userDescriptionSparseGraphPath = "tmp/community/userDescriptionSimliaritySparseGraph.txt";
+	private static String userPlaceSimilaritySparseGraphPath = "tmp/community/userPlaceSimilaritySparseGraph.txt";
 
 	private static double descriptionSimliaritythreshold = 0.1;
 	private static LocationLevel locationSimilarityThreshold = LocationLevel.CITY;
+	
+	private static String userListPath = "tmp/community/userList.txt";
+
+	private static int nClusters = 3;
 
 	/**
 	 * @param args
@@ -72,6 +76,25 @@ public class UserGraphBuilder {
 			users.add(u);
 		}
 
+//		CommunityDetector spectralCommunityDetector = new SpectralCommunityDetector();
+		
+		double[][] userDescriptionSimilarity = findDescriptionSimliarity(users);
+		boolean[][] userDescriptionGraph = TwitterMatrixUtils.toGraph(userDescriptionSimilarity,
+				descriptionSimliaritythreshold);
+		
+//		List<List<UserDto>> communities = spectralCommunityDetector.cluster(userDescriptionGraph, users, nClusters );
+		
+//		users.clear();
+//		System.out.println(users.size());
+//		for (List<UserDto> community : communities) {
+//			for (UserDto u : community) {
+//				users.add(u);
+//			}
+//		}
+		
+		// write userNames to file
+		TwitterFileUtils.write(users, userListPath);
+		
 		List<Long> userIds = new ArrayList<Long>();
 		for (UserDto u : users) {
 			userIds.add(u.getId());
@@ -83,25 +106,23 @@ public class UserGraphBuilder {
 
 		int[][] userMentionGraph = getUserMentionGraph(statuses, userIds);
 		int[][] userReplyGraph = getUserReplyGraph(statuses, userIds);
-		double[][] userDescriptionSimilarity = findDescriptionSimliarity(users);
-		boolean[][] userDescriptionGraph = TwitterMatrixUtils.toGraph(userDescriptionSimilarity,
+		userDescriptionSimilarity = findDescriptionSimliarity(users);
+		userDescriptionGraph = TwitterMatrixUtils.toGraph(userDescriptionSimilarity,
 				descriptionSimliaritythreshold);
-//		boolean[][] placeSimilarityGraph = findPlaceSimilarity(users, locationSimilarityThreshold);
-//
-//		TwitterFileUtils.writeSparse(userMentionGraph, userMentionSparseGraphPath);
-//		TwitterFileUtils.writeSparse(userReplyGraph, userReplySparseGraphPath);
-//		TwitterFileUtils.writeSparse(userDescriptionGraph, userDescriptionSparseGraphPath);
-//		TwitterFileUtils.writeSparse(placeSimilarityGraph, userPlaceSimilaritySparseGraphPath);
-//
-//		TwitterFileUtils.write(userMentionGraph, userMentionGraphPath);
-//		TwitterFileUtils.write(userReplyGraph, userReplyGraphPath);
-//		TwitterFileUtils.write(userDescriptionGraph, userDescriptionGraphPath);
-//		TwitterFileUtils.write(placeSimilarityGraph, userPlaceSimilarityGraphPath);
-//
-//		TwitterFileUtils.write(userDescriptionSimilarity, userDescriptionSimilarityPath);
+		boolean[][] placeSimilarityGraph = findPlaceSimilarity(users, locationSimilarityThreshold);
 
-		CommunityDetector spectralCommunityDetector = new SpectralCommunityDetector();
-		spectralCommunityDetector.cluster(userDescriptionGraph);
+		TwitterFileUtils.writeSparse(userMentionGraph, userMentionSparseGraphPath);
+		TwitterFileUtils.writeSparse(userReplyGraph, userReplySparseGraphPath);
+		TwitterFileUtils.writeSparse(userDescriptionGraph, userDescriptionSparseGraphPath);
+		TwitterFileUtils.writeSparse(placeSimilarityGraph, userPlaceSimilaritySparseGraphPath);
+
+		TwitterFileUtils.write(userMentionGraph, userMentionGraphPath);
+		TwitterFileUtils.write(userReplyGraph, userReplyGraphPath);
+		TwitterFileUtils.write(userDescriptionGraph, userDescriptionGraphPath);
+		TwitterFileUtils.write(placeSimilarityGraph, userPlaceSimilarityGraphPath);
+
+		TwitterFileUtils.write(userDescriptionSimilarity, userDescriptionSimilarityPath);
+
 	}
 
 	private static boolean[][] findPlaceSimilarity(List<UserDto> users, LocationLevel locationSimilarityThreshold)
@@ -118,23 +139,23 @@ public class UserGraphBuilder {
 
 			GAddress address = GCoder.geocode(u.getLocation());
 			if (address != null) {
-
-				switch (locationSimilarityThreshold) {
-				case STREET:
-					locations[userIndex] = address.address;
-					break;
-				case CITY:
-					locations[userIndex] = address.city;
-					break;
-				case STATE:
-					locations[userIndex] = address.state;
-					break;
-				case COUNTRY:
-					locations[userIndex] = address.countryCode;
-					break;
-				default:
-					break;
-				}
+				locations[userIndex] = address.city;
+//				switch (locationSimilarityThreshold) {
+//				case STREET:
+//					locations[userIndex] = address.address;
+//					break;
+//				case CITY:
+//					locations[userIndex] = address.city;
+//					break;
+//				case STATE:
+//					locations[userIndex] = address.state;
+//					break;
+//				case COUNTRY:
+//					locations[userIndex] = address.countryCode;
+//					break;
+//				default:
+//					break;
+//				}
 			}
 			userIndex++;
 		}
@@ -147,7 +168,7 @@ public class UserGraphBuilder {
 
 		for (int i = 0; i < users.size(); ++i) {
 			for (int j = 0; j < users.size(); ++j) {
-				if (locations[i] != null && !locations[i].isEmpty() && locations[i] == locations[j]) {
+				if (locations[i] != null && !locations[i].isEmpty() && locations[i].equals(locations[j])) {
 					userLocationGraph[i][j] = true;
 				} else {
 					userLocationGraph[i][j] = false;

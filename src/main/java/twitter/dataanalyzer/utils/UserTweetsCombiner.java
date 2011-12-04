@@ -43,11 +43,14 @@ public class UserTweetsCombiner {
 		
 		List<File> userTweetFiles = new ArrayList<File>();
 		
-		for (UserDto u : users) {
+		for (int i = 0; i < users.size(); ++i) {
+			UserDto u = users.get(i);
 			Criteria c = session.createCriteria(StatusDto.class);
 			c.add(Restrictions.eq("user", u));
 			List<StatusDto> statuses = c.list();
 			if (statuses.isEmpty()) {
+				users.remove(i);
+				--i;
 				continue;
 			}
 			File f = new File(documentDir+File.separator+u.getScreenName()+FILE_EXTENSION);

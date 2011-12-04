@@ -4,8 +4,11 @@
 package twitter.dataanalyzer.graphbuilder;
 
 import java.io.IOException;
+import java.util.List;
 
+import twitter.dataanalyzer.utils.KMeans;
 import twitter.dataanalyzer.utils.TwitterFileUtils;
+import twitter.dto.UserDto;
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 
@@ -18,7 +21,7 @@ public class SpectralCommunityDetector implements CommunityDetector {
 	/* (non-Javadoc)
 	 * @see twitter.dataanalyzer.graphbuilder.CommunityDetector#cluster(int[][])
 	 */
-	public void cluster(int[][] A) {
+	public List<List<UserDto>> cluster(int[][] A, List<UserDto> users, int k) {
 		
 		int[] vertexDegree = new int[A.length];
 		int nEdges = 0;	// These are number of directed edges. Therefore, 2|E| for undirected graph
@@ -42,6 +45,10 @@ public class SpectralCommunityDetector implements CommunityDetector {
 		double[] imagEigenValues = evd.getImagEigenvalues();
 		double[] realEigenValues = evd.getRealEigenvalues();
 		Matrix eigenVectors = evd.getV();
+
+		double[][] EigenMatrix = eigenVectors.getArray();
+		
+		List<List<UserDto>> clusters = new KMeans().cluster(EigenMatrix, users, k, 100);
 		
 		try {
 			TwitterFileUtils.write(eigenVectors.getArray(), "tmp/eigenVectors.txt");
@@ -51,12 +58,14 @@ public class SpectralCommunityDetector implements CommunityDetector {
 			e.printStackTrace();
 		}
 		
+		return clusters;
+		
 	}
 
 	/* (non-Javadoc)
 	 * @see twitter.dataanalyzer.graphbuilder.CommunityDetector#cluster(boolean[][])
 	 */
-	public void cluster(boolean[][] A) {
+	public List<List<UserDto>> cluster(boolean[][] A, List<UserDto> users, int k) {
 		int[][] A_int = new int[A.length][A[0].length];
 		
 		for (int i = 0; i < A.length; ++i) {
@@ -64,6 +73,7 @@ public class SpectralCommunityDetector implements CommunityDetector {
 				A_int[i][j] = (A[i][j])?1:0; 
 			}
 		}
+		return cluster(A_int, users, k);
 	}
 
 }

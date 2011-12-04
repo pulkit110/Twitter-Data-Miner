@@ -3,12 +3,16 @@
  */
 package twitter.dataanalyzer.graphbuilder;
 
+import java.util.List;
+
+import twitter.dto.UserDto;
+
 /**
  * @author pulkit and sapan
  *
  */
 public interface CommunityDetector {
 
-	void cluster(int[][] A);
-	void cluster(boolean[][] A);
+	List<List<UserDto>> cluster(int[][] A, List<UserDto> users, int k);
+	List<List<UserDto>> cluster(boolean[][] A, List<UserDto> users, int k);
 }

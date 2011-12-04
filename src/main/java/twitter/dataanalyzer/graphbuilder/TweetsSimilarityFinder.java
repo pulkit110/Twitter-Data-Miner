@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.document.Document;
@@ -20,6 +21,7 @@ import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 
 import twitter.dataanalyzer.utils.LuceneIndexer;
+import twitter.dataanalyzer.utils.TwitterFileUtils;
 import twitter.dataanalyzer.utils.TwitterMatrixUtils;
 import twitter.dataanalyzer.utils.UserTweetsCombiner;
 import twitter.dto.UserDto;
@@ -34,40 +36,73 @@ import dbutils.HibernateUtil;
  */
 public class TweetsSimilarityFinder {
 
+	private static String userClustersPath = "tmp/community/userClusters.txt";
+	private static String clusteredLSAMatrixPath = "tmp/community/clusteredLSAMatrix.txt";
+	private static String clusteredLSAGraphPath = "tmp/community/clusteredLSAGraph.txt";
+	private static double cosineThreshold = 0.30;
+	private static String clusteredCosineGraphPath = "tmp/community/clusteredCosineGraph.txt";
+	private static String clusteredCosineMatrixPath = "tmp/community/clusteredCosineMatrix.txt";
 	String indexPath = "tmp/luceneIndex";
 	String documentDir = "tmp/userTweets";
 
 	LuceneIndexer luceneIndexer;
+	public List<UserDto> users;
 
 	/**
 	 * @param args
 	 * @throws IOException
 	 * @throws CorruptIndexException
 	 */
-	public static void main(String[] args) throws CorruptIndexException,
-			IOException {
+	public static void main(String[] args) throws CorruptIndexException, IOException {
 
 		int nUsers = 400;
+		int nClusters = 3;
+		double LSAThreshold = 0.8;
 
 		TweetsSimilarityFinder tweetsSimilarityFinder = new TweetsSimilarityFinder();
 
 		tweetsSimilarityFinder.buildIndex();
 
-		List<File> userTweets = tweetsSimilarityFinder
-				.generateTweetFiles(nUsers);
-		tweetsSimilarityFinder.getLuceneIndexer().addAll(
-				tweetsSimilarityFinder.getDocumentDir());
+		List<File> userTweets = tweetsSimilarityFinder.generateTweetFiles(nUsers);
+		tweetsSimilarityFinder.getLuceneIndexer().addAll(tweetsSimilarityFinder.getDocumentDir());
 
 		IndexReader indexReader = tweetsSimilarityFinder.readIndex();
 
-		TwitterMatrixUtils.printTermFrequenciesToFile(indexReader);
-		
-		double[][] termDocMatrix = TwitterMatrixUtils
-				.buildTermDocMatrix(indexReader);
-		
-		TwitterMatrixUtils.docsCosineSimilarity(termDocMatrix);
-		TwitterMatrixUtils.docsLSASimilarity(termDocMatrix);
+		tweetsSimilarityFinder.users = TwitterMatrixUtils.printTermFrequenciesToFile(indexReader);
 
+		// System.out.println(tweetsSimilarityFinder.users.size());
+		double[][] termDocMatrix = TwitterMatrixUtils.buildTermDocMatrix(indexReader);
+
+		double[][] cosineSimilarityMatrix = TwitterMatrixUtils.docsCosineSimilarity(termDocMatrix);
+
+		// double[][] docsLSASimilarityMatrix =
+		// TwitterMatrixUtils.docsLSASimilarity(termDocMatrix);
+
+		CommunityDetector spectralCommunityDetector = new SpectralCommunityDetector();
+		List<List<UserDto>> communities = spectralCommunityDetector.cluster(
+				TwitterMatrixUtils.toGraph(cosineSimilarityMatrix, cosineThreshold), tweetsSimilarityFinder.users,
+				nClusters);
+
+		List<UserDto> userClusters = new ArrayList<UserDto>();
+		for (List<UserDto> community : communities) {
+			userClusters.addAll(community);
+		}
+
+		TwitterFileUtils.write(userClusters, userClustersPath);
+
+		double[][] clusteredCosineMatrix = new double[cosineSimilarityMatrix.length][cosineSimilarityMatrix[0].length];
+		int userIndex = 0;
+		for (int i = 0; i < cosineSimilarityMatrix.length; ++i) {
+			int newI = userClusters.indexOf(tweetsSimilarityFinder.users.get(i));
+			for (int j = 0; j < cosineSimilarityMatrix[i].length; ++j) {
+				int newJ = userClusters.indexOf(tweetsSimilarityFinder.users.get(j));
+				clusteredCosineMatrix[newI][newJ] = cosineSimilarityMatrix[i][j];
+			}
+		}
+
+		TwitterFileUtils.write(clusteredCosineMatrix, clusteredCosineMatrixPath);
+		TwitterFileUtils.write(TwitterMatrixUtils.toGraph(clusteredCosineMatrix, cosineThreshold),
+				clusteredCosineGraphPath);
 	}
 
 	private List<File> generateTweetFiles(int nUsers) {
@@ -77,17 +112,17 @@ public class TweetsSimilarityFinder {
 		Criteria c = session.createCriteria(UserDto.class);
 		c.add(Restrictions.eq("visited", true));
 		c.add(Restrictions.gt("connectionDepth", 0));
-//		c.add(Restrictions.gt("followersCount", 25));
-//		c.add(Restrictions.gt("friendsCount", 25));
-//		c.add(Restrictions.gt("statusesCount", 50));
+		// c.add(Restrictions.gt("followersCount", 25));
+		// c.add(Restrictions.gt("friendsCount", 25));
+		// c.add(Restrictions.gt("statusesCount", 50));
 		c.setMaxResults(nUsers);
 		List<UserDto> users = c.list();
 
 		session.close();
 
-		UserTweetsCombiner userTweetsCombiner = new UserTweetsCombiner(
-				documentDir);
+		UserTweetsCombiner userTweetsCombiner = new UserTweetsCombiner(documentDir);
 		userTweetsCombiner.setUsers(users);
+
 		try {
 			return userTweetsCombiner.generateTweetFiles();
 		} catch (IOException e) {

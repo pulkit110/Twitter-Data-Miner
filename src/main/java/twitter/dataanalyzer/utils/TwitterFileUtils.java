@@ -3,6 +3,9 @@ package twitter.dataanalyzer.utils;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+
+import twitter.dto.UserDto;
 
 public class TwitterFileUtils {
 
@@ -68,5 +71,13 @@ public class TwitterFileUtils {
 		}
 		out.close();
 
+	}
+
+	public static void write(List<UserDto> users, String path) throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter(path));
+		for (UserDto u : users) {
+			out.write(u.getScreenName() + "\n");
+		}
+		out.close();
 	}
 }
