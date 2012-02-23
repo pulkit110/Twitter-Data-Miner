@@ -13,7 +13,7 @@ import org.hibernate.impl.QueryImpl;
 
 public class GCoder {
 	private static final String URL = "http://maps.google.com/maps/geo?output=json";
-	private static final String DEFAULT_KEY = "AIzaSyCyVG8EIT-ICXO5N44ahq-IXUtzK9PVICw";
+	private static final String DEFAULT_KEY = "API-KEY";
 
 	public static GAddress geocode(String address, String key) throws Exception {
 		URL url = new URL(URL + "&q=" + URLEncoder.encode(address, "UTF-8")
@@ -99,4 +99,3 @@ public class GCoder {
 		System.out.println(GCoder.geocode("94103"));
 	}
 }
-// ABQIAAAAdaexNcmdTGjUOs3Pu_MykhSRCIgguXOLihS2HlrF0GGQ4cYAHhRiV9uFpf5zPfZhTL9-V2UfCkjgBA
