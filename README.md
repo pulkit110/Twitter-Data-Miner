@@ -1,0 +1,7 @@
+Twitter-Data-Miner
+==================
+This repository contains bits and pieces of code written for the semester project on Data Mining and Analysis on Twitter.
+
+With the tremendous growth of social networks, there has been a growth in the amount of new data that is being created every minute on these networking sites. Twitter acts as a great source of rich information for millions of users on the internet and therefore is apt for applying data mining. The notion of community in this social networking world has caught lots of attention. Such algorithms are even harder to analyse users on Twitter as it is an asymmetric micro blogging service. If you follow me, I do not have to follow you. This means that the connections of Twitter depend less on in-person contact, as many users have more followers than they know. Studying Twitter is useful for understanding how people use new communication technologies to form social connections and maintain existing ones. We begin with a few discussions of how geo-tagged tweets in Twitter can be used to identify useful user features and behaviours as well as identify landmarks/places of interests. We then present an analysis of clustering algorithms and propose different similarity measures to detect communities. We conclude with a brief discussion about different similarity features that affect the event of a future mention between users on Twitter.
+
+Read the full report [here](http://infoscience.epfl.ch/record/177280).
